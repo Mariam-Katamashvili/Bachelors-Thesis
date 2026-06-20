@@ -1,3 +1,28 @@
+## Project-specific:
+# Claude Code workspace
+.claude/
+
+# Nested/external repo, not part of the thesis sources
+regular-expression-derivative_1/
+
+# TeX Live cache (regenerated on build)
+.texlive-cache/
+
+# Compiled output (submitted separately)
+main.pdf
+
+# Editor settings
+.vscode/
+
+# Build config and reference material, not thesis sources
+.latexmkrc
+Bachelor_Thesis_Guidelines_KIU_English*.pdf
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof

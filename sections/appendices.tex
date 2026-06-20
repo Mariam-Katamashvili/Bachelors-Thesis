@@ -1,0 +1,48 @@
+\addcontentsline{toc}{section}{Appendices}
+\section*{Appendices}
+
+\subsection*{Appendix A: Structure of the Rocq Development}
+
+The accompanying Rocq formalisation~\cite{OurRocqRepo} is organised into the
+following source files, listed in dependency order. Together they build the crisp
+theory of derivatives and the derivative automaton on top of the
+Coquand--Siles~\cite{CoquandRegexEquality,RocqRegexpBrzozowski} normalisation
+machinery, and provide the similarity infrastructure for the fuzzy layer.
+
+\begingroup\sloppy
+\begin{itemize}
+  \item \texttt{Alphabet.v}: abstract alphabet via the module types
+        \texttt{SYM}, \texttt{OSYM}, \texttt{FINSYM}, \texttt{OFINSYM}
+        (symbols, ordered symbols, finite alphabets).
+  \item \texttt{Languages.v}: words (\texttt{word}) and languages
+        (\texttt{language}) together with the language operations
+        \texttt{void}, \texttt{eps}, \texttt{atom}, \texttt{plus}, \texttt{conc},
+        \texttt{star}, \texttt{prod}, \texttt{compl}.
+  \item \texttt{RegexSemantics.v}: the inductive type \texttt{regex}, the
+        predicate \texttt{restricted\_regex}, the semantic interpretation
+        \texttt{den}, and semantic equivalence with its equivalence-relation
+        proofs.
+  \item \texttt{Nullable.v}: the nullability test \texttt{has\_eps}/\texttt{nu}
+        and its correctness (\texttt{nullable\_correct}, \texttt{mem\_nu}).
+  \item \texttt{Canonicalization.v}: normalisation \texttt{canonize} via smart
+        constructors (\texttt{mkPlus}, \texttt{mkConc}, \texttt{mkStar},
+        \texttt{mkAnd}, \texttt{mkNot}) and the similarity relation \texttt{similar}.
+  \item \texttt{CanonicalizationCorrectness.v}: correctness of normalisation,
+        with \texttt{similar\_iff\_nf\_eq}, \texttt{similar\_sound} and
+        \texttt{canonize\_correct}.
+  \item \texttt{Derivatives.v}: semantic derivatives (\texttt{dlang}) and
+        syntactic derivatives (\texttt{D\_char}, \texttt{D}), the
+        correspondence theorem (\texttt{D\_correct}), and regularity
+        preservation (\texttt{derivative\_regular}).
+  \item \texttt{Automata.v}, \texttt{AutomataConstruction.v}: the derivative
+        DFA (\texttt{constructed\_dfa}, \texttt{construct\_dfa}), the extended
+        transition function (\texttt{delta\_star}), and DFA correctness
+        (\texttt{dfa\_correctness}).
+  \item \texttt{SimilarityRelations.v}: T-norm (\texttt{smin}), cut value
+        (\texttt{cut\_value}, \texttt{mu\_cut}), proximity and similarity
+        (\texttt{is\_proximity}, \texttt{is\_similarity}), and the relations
+        \texttt{Rw}, \texttt{RL}, \texttt{Rr} with their similarity proofs.
+  \item Supporting and example files: \texttt{DerivativeExamples.v},
+        \texttt{ExamplesCanonicize.v}, \texttt{AutomataExample.v}.
+\end{itemize}
+\endgroup

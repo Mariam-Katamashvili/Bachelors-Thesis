@@ -1,0 +1,27 @@
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+
+This thesis studies Brzozowski derivatives of regular expressions in two settings,
+the classical crisp one and a fuzzy one based on similarity, and verifies the core
+of the theory in the Rocq proof assistant. In the crisp setting it defines derivatives of regular languages and expressions, the
+correspondence between the syntactic and the semantic derivative, the finiteness of
+the set of derivatives, and the construction of the deterministic automaton that has
+canonical derivatives as its states. The original contribution is the fuzzy layer,
+which replaces exact symbol matching by a similarity relation cut at a threshold
+$\mu$. Its main observation is that, under the minimum triangular norm,
+cut-similarity is an equivalence relation, so a fuzzy derivative over the alphabet is
+just an ordinary derivative over the quotient alphabet obtained by identifying
+similar symbols. Through this quotient construction regularity, the
+semantic-syntactic correspondence, finiteness, and correctness of the fuzzy
+automaton all carry over from the crisp theory, and the automaton recognises exactly
+the words that lie within tolerance $\mu$ of some word of the original language. The
+crisp theory and the similarity infrastructure are mechanised in Rocq on top of an
+existing formalisation of regular-expression equivalence, with the code presented
+alongside the mathematics it certifies, so that the central claims are
+machine-checked rather than argued only on paper.
+
+\bigskip
+\noindent\textbf{Keywords:} regular expressions, Brzozowski derivatives, finite
+automata, fuzzy similarity, triangular norms, formal verification, Rocq.
+
+\clearpage

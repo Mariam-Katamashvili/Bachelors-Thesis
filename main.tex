@@ -1,0 +1,133 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{microtype}
+
+\usepackage[left=3cm,right=1.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+
+% Allow a little extra stretch on hard-to-break lines (long \texttt names, wide
+% inline math) to avoid small overfull boxes.
+\setlength{\emergencystretch}{2em}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{fontspec}
+\IfFontExistsTF{Sylfaen}{
+  \newfontfamily{\titlepagefont}{Sylfaen}[AutoFakeBold=1.0]
+}{
+  \newfontfamily{\titlepagefont}{Liberation Serif}
+}
+\setmainfont{Times New Roman}
+
+% Monospaced font for Rocq listings: Consolas covers most of the Unicode symbols
+% used verbatim in the Coq sources; a fallback supplies any it lacks (e.g. emptyset).
+\newfontfamily{\rocqfont}{Consolas}
+
+\usepackage{listings}
+\lstdefinestyle{thesiscode}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  numbers=left,
+  numbersep=8pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  aboveskip=0.75\baselineskip,
+  belowskip=0.75\baselineskip,
+  breaklines=true
+}
+
+% Listing style for Rocq/Coq source, used in the formalisation section.
+\lstdefinelanguage{Rocq}{
+  morekeywords={Module,Import,Export,Inductive,Definition,Fixpoint,Record,
+    Theorem,Lemma,Proof,Qed,Defined,match,with,end,if,is,then,else,fun,
+    forall,exists,Type,Prop,bool,Set,Variable,Hypothesis,Section,return,let,in,
+    From,Require,Notation},
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+  morestring=[b]"
+}
+\lstdefinestyle{rocqstyle}{
+  language=Rocq,
+  basicstyle=\rocqfont\footnotesize,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  numbers=left,
+  numbersep=8pt,
+  xleftmargin=1.2em,
+  xrightmargin=0.5em,
+  aboveskip=0.75\baselineskip,
+  belowskip=0.75\baselineskip,
+  breaklines=true,
+  extendedchars=true,
+  inputencoding=utf8
+}
+
+\usepackage[style=ieee,backend=biber,sorting=nyt]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,automata}
+
+\usepackage[hidelinks]{hyperref}
+
+
+\newcommand{\cR}{{\mathcal R}}
+\def\cut{\mu}
+\def\eg{{\em e.g.\ }}
+\def\ie{{\em i.e.\ }}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{conjecture}{Conjecture}[section]
+
+
+\newcommand{\thesisUniversity}{Kutaisi International University}
+\newcommand{\thesisSchool}{School of Computer Science}
+\newcommand{\thesisProgram}{Bachelor's Program in Computer Science}
+\newcommand{\thesisStudentName}{Mariam Katamashvili}
+\newcommand{\thesisTitle}{Formalization of Crisp and Fuzzy Derivatives of Regular Expressions in Rocq}
+\newcommand{\thesisDegree}{Bachelor of Computer Science}
+\newcommand{\thesisSupervisorName}{Besik Dundua}
+\newcommand{\thesisSupervisorPosition}{Professor}
+\newcommand{\thesisSecondSupervisorName}{Furio Honsell}
+\newcommand{\thesisSecondSupervisorPosition}{Professor}
+\newcommand{\thesisPlaceYear}{Kutaisi, 2026}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\input{sections/titlepage}
+\hypersetup{pageanchor=true}
+
+\pagenumbering{roman}
+\input{sections/declaration}
+\input{sections/abstract}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+
+\input{sections/introduction}
+\input{sections/literature_review}
+\input{sections/methodology_results}
+\input{sections/conclusion}
+
+\printbibliography[heading=bibintoc,title={Bibliography}]
+
+\input{sections/appendices}
+
+\end{document}

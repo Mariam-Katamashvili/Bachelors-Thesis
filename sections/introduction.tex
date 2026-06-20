@@ -1,0 +1,89 @@
+\section{Introduction}\label{sec:introduction}
+
+Regular expressions were introduced by Stephen Kleene in the 1950s as a notation for
+describing the patterns that a finite-state machine can recognise. The idea was to
+capture, with a few simple operators for choice, concatenation and repetition,
+exactly the languages accepted by finite automata, and that correspondence between a
+compact piece of syntax and a machine has proved to be one of the most durable ideas
+in computer science. Regular expressions are interesting precisely because they sit
+at this meeting point of theory and practice. On the theoretical side they describe a
+well-understood class of languages and come with a rich algebra. On the practical
+side they are
+everywhere, from the lexical analysers inside every compiler, through search and
+text processing, to validation of input and scanning of network traffic. A notation
+that a programmer types in seconds is backed by decades of automata theory, and that
+is what makes getting its foundations right worthwhile.
+
+The usual way to run a regular expression is to compile it into a finite automaton
+and then let the machine consume the input, using one of the classical
+constructions of Thompson~\cite{Thompson1968}, Glushkov~\cite{Glushkov1962}, or
+McNaughton and Yamada~\cite{McNaughtonYamada1960}. There is also an older and more
+direct idea, due to Brzozowski~\cite{B62}, that this thesis takes as its starting
+point. Rather than building a separate machine, one can differentiate the expression
+itself: the derivative of an expression with respect to a symbol describes what
+remains to be matched after that symbol has been consumed, so iterating it across an
+input word is already a way of running the expression. When derivatives are kept in
+a canonical form there are only finitely many of them, and taking those canonical
+derivatives as states yields a deterministic automaton with no auxiliary
+construction at all. The approach has aged well and was reexamined from a modern
+implementation perspective by Owens, Reppy and Turon~\cite{OwensReppyTuron}.
+
+Exact matching, however, is often stricter than an application really wants. Text is
+noisy, symbols are mistyped or substituted, and two inputs that a person would treat
+as the same can differ in a handful of places. This is why fuzziness is interesting:
+a great deal of real matching is approximate, and a theory that insists on equality
+of symbols cannot describe it. A natural way to relax the rigidity is to replace
+equality between symbols by a graded notion of similarity, so that two symbols match
+not only when they are identical but also when they are close enough, with closeness
+measured by a value in $[0,1]$ and combined using triangular norms and the machinery
+of fuzzy logic~\cite{met05}. The same instinct drives similarity-based logic
+programming~\cite{Sessa2002}, where unification is loosened into matching up to a
+similarity relation. The question this thesis asks is what becomes of Brzozowski's
+derivative theory under this relaxation: if the consumed symbol need only be similar
+to the first symbol of a word in the language, up to a threshold $\mu$, does the
+clean derivative-based account of regular languages and automata still hold together?
+
+The answer is that it does, and for a reason that is simple once it is isolated.
+When similarity is combined with the minimum triangular norm, cutting the similarity
+relation at a threshold $\mu$ produces an equivalence relation, and a fuzzy
+derivative over the original alphabet is then nothing more than an ordinary
+derivative over the quotient alphabet obtained by identifying symbols that are
+similar within $\mu$. Through this quotient-alphabet construction the crisp theory
+transfers to the fuzzy setting almost wholesale, so regularity, the correspondence
+between the syntactic and the semantic derivative, finiteness of the set of
+derivatives, and correctness of the derivative automaton all carry over, and the
+resulting fuzzy automaton accepts precisely the words that lie within tolerance
+$\mu$ of some word of the original language.
+
+Stating such results is one thing; being sure of them is another, and this is where
+formalisation enters and why it is arguably the most important part of the thesis.
+Derivative arguments are easy to get subtly wrong, and the finiteness claims that
+make the automaton construction terminate are exactly the kind of constructive
+statement where informal reasoning tends to gloss over real difficulty. A proof
+assistant removes that doubt: it forces every simplification, every side condition
+and every induction to be spelled out, and it checks the result mechanically, so a
+theorem that has been formalised is one whose proof has been audited down to the last
+step by a program that cannot be talked into accepting a gap. Formalisation is
+interesting in its own right because it turns mathematical confidence from a matter
+of careful reading into a matter of machine verification, and it is especially
+valuable for a theory like this one that is meant to be both correct and executable.
+For that reason the crisp theory is not only proved on paper but also mechanised in
+the Rocq proof assistant~\cite{Rocq}, building on the Coquand--Siles formalisation of
+regular-expression equivalence via Brzozowski
+derivatives~\cite{CoquandRegexEquality,RocqRegexpBrzozowski}. The mechanisation
+covers the syntax and semantics of regular expressions, the nullability test,
+canonicalisation and its correctness, the derivative correspondence and the
+correctness of the derivative automaton, and it supplies the similarity
+infrastructure on which the fuzzy layer rests. The full development is available as
+an accompanying repository~\cite{OurRocqRepo}, and rather than confine it to a
+section of its own the code is presented next to the mathematics it certifies.
+
+The rest of the thesis is organised as follows. Section~\ref{sec:literature} places
+the work in the context of the existing literature on regular expressions,
+derivatives, their formalisation, and fuzzy automata.
+Section~\ref{sec:methodology} contains the technical development in two layers: the
+crisp theory of derivatives and the derivative automaton, presented together with
+its Rocq formalisation, followed by the fuzzy layer with its definitions, the
+quotient construction, and the fuzzy automaton. Section~\ref{sec:conclusion}
+summarises what has been achieved and points to the directions that follow from it,
+chief among them completing the mechanisation of the fuzzy layer.
