@@ -1,74 +1,46 @@
 \section{Conclusion}\label{sec:conclusion}
 
-The question behind this thesis was whether the derivative-based theory of regular
-languages still works once exact symbol matching is dropped and symbols are allowed
-to match by similarity instead, and whether the core of that theory can be checked
-by a machine rather than trusted on paper. The work in the preceding sections
-answers yes to both.
+Two questions stand behind this thesis. The first is whether the derivative-based
+theory of regular languages still works once exact symbol matching is dropped and
+symbols match by similarity instead. The second is whether the core of that theory
+can be checked by a proof assistant rather than trusted on paper. The preceding
+sections answer yes to both.
 
-On the crisp side the thesis gives a self-contained account of derivatives of
-regular languages and of regular expressions. The result everything else rests on is
-Theorem~\ref{the:two-derivative-mapping}, which says that the syntactic derivative
+On the crisp side the thesis develops derivatives of
+regular languages and of regular expressions. Everything else rests on
+Theorem~\ref{the:two-derivative-mapping}. It says that the syntactic derivative
 of an expression and the semantic derivative of its language describe the same
-thing once an expression is read as the language it denotes. From there it is a
-short step to the fact that derivatives stay regular and that an expression has only
+thing once an expression is read as the language it denotes. From there derivatives
+stay regular (Theorem~\ref{the:language-derivative-regular}) and an expression has only
 finitely many derivative languages (Theorem~\ref{the:derivative-set-is-finite}).
-That finiteness is exactly what makes the derivative automaton possible: taking
+That finiteness makes the derivative automaton possible. Taking
 canonical derivatives as states and differentiation as the transition yields a
 deterministic automaton that recognises the right language
-(Theorem~\ref{the:dfa-correctness}) and that a terminating algorithm actually
+(Theorem~\ref{the:dfa-correctness}) and that a terminating algorithm
 builds.
 
-The fuzzy layer is where the thesis makes its own contribution. Once equality of
-symbols is replaced by a fuzzy similarity relation together with a cut value $\mu$,
-fuzzy derivatives of both languages and restricted regular expressions arise
+In the fuzzy layer equality of symbols is replaced by a fuzzy similarity relation
+together with a cut value $\mu$. Fuzzy derivatives of both languages and restricted regular
+expressions arise
 (Definitions~\ref{def:fuzzy-deriv-lang} and~\ref{def:fuzzy-deriv-expr}). The idea
-that makes the whole layer tractable is small but decisive: under the minimum
-T-norm, cut-similarity turns out to be an equivalence relation
+that makes the layer work is simple. Under the minimum
+T-norm, cut-similarity is an equivalence relation
 (Proposition~\ref{prop:cut-equivalence}). Once that is in hand, a fuzzy derivative
 over $\Sigma$ is just an ordinary derivative over the quotient alphabet
 $\Sigma^{\mu}$ obtained by collapsing $\mu$-similar symbols into a single class
-(Theorem~\ref{the:quotient-fuzzy-derivative}). This quotient picture is what lets
-the crisp theory carry over almost without extra effort, so regularity
+(Theorem~\ref{the:quotient-fuzzy-derivative}). This quotient picture lets
+the crisp theory carry over, so regularity
 (Theorem~\ref{the:fuzzy-regular}), the correspondence between syntax and semantics
 (Theorem~\ref{the:fuzzy-correspondence}), finiteness
 (Theorem~\ref{the:fuzzy-finite}) and fuzzy DFA correctness
-(Theorem~\ref{the:fuzzy-dfa}) all follow. In plain terms, the fuzzy automaton
-accepts precisely the words that come within tolerance $\mu$ of some word in the
-original language.
+(Theorem~\ref{the:fuzzy-dfa}) all follow. The fuzzy automaton
+accepts the words that come within threshold $\mu$ of some word in the
+language.
 
-This quotient construction is really the point of the thesis. It does more than
-confirm that the fuzzy theorems happen to hold; it explains why fuzzification by
-cut-similarity behaves so well in the first place, and it makes the fuzzy derivative
-something computable, since the computation collapses to ordinary derivatives
-over a finite quotient alphabet. The verification side carries its own weight.
-Mechanising the crisp theory in Rocq turns the central claims into statements a
-proof assistant has checked, covering the syntax and semantics, nullability,
-canonicalisation and its correctness, the derivative correspondence and DFA
-correctness. That assurance matters most where it is hardest to be sure by hand,
-which is in the constructive finiteness arguments.
-
-The fuzzy expression theory is
-developed on the restricted fragment, with concatenation, union and star, where
-syntactic similarity behaves monotonically and the quotient argument goes through
-cleanly (Remark~\ref{rem:syntax-sensitive}). It rests on the idempotence of the
-minimum T-norm, which is what turns cut-similarity into an equivalence and lets the
-quotient construction do its work, and alongside it the thesis gives a definition of
-the fuzzy derivative that already reads for a general T-norm. The crisp layer is
-mechanised in Rocq end to end, and the similarity infrastructure that the fuzzy
-results build on is formalised there as well.
-
-These same boundaries mark the natural next steps. The most immediate is to carry the
-fuzzy layer into Rocq on top of the similarity infrastructure that is already in
-place, and to settle the targeted Kuratowski-finiteness result for canonical
-derivatives. Beyond that, it would be interesting to study fuzzy derivatives for
-general, non-idempotent left-continuous T-norms, where cut relations stop being
-equivalences and the clean quotient construction has to give way to something more
-subtle. A further direction is to connect this similarity-based account more
-carefully to the membership-weight tradition of fuzzy
-automata~\cite{LP06,SC12,GJT17,SilvaBonchiBonsangueRutten2011} and to the
-quantitative pattern-matching line of
-work~\cite{AlvesKesnerRamos2025}, and to develop the fuzzy derivative automaton as a
-genuine fuzzy transition system. Taken together, these steps would turn what is
-developed here into a fully mechanised and more widely applicable framework for
-approximate matching.
+The crisp theory is formalised in Rocq. It covers the
+syntax and semantics, nullability, canonicalisation and its correctness, the
+derivative correspondence and DFA correctness, and it turns these claims into
+statements a proof assistant has checked. The similarity infrastructure that the
+fuzzy results build on is formalised there as well. The next step is to settle the
+Kuratowski-finiteness result for canonical derivatives. After that the fuzzy layer
+can be implemented, including the construction of a fuzzy derivative automaton.

@@ -1,7 +1,7 @@
 \section{Literature Review}\label{sec:literature}
 
 The theory this thesis builds on splits into a few strands that have largely
-developed in parallel, and it is worth seeing where each of them stands before
+developed in parallel. It is worth seeing where each of them stands before
 combining them. The first strand is the classical correspondence between regular
 expressions and finite automata. The standard constructions that realise an
 expression as a machine are Thompson's translation into a nondeterministic automaton
@@ -16,19 +16,19 @@ regular algebra and finite machines~\cite{C71} organises the equational theory,
 while Salomaa gave complete axiom systems for the algebra of regular
 events~\cite{Salomaa} and Kozen later established completeness for Kleene algebra
 and the algebra of regular events~\cite{Kozen}. This line is concerned with when two
-expressions denote the same language and with axiomatising that equivalence, which
-is a different question from how to match efficiently, but it is closely related,
+expressions denote the same language and with axiomatising that equivalence. That
+is a different question from how to match efficiently, but a closely related one,
 since deciding equivalence is one of the things a good normal form for expressions
 should help with.
 
 The derivative approach sits between these two and is the one this thesis takes as
 its starting point. Brzozowski introduced derivatives of regular
-expressions~\cite{B62} and showed that differentiating an expression with respect to
-a symbol, together with a test for whether the empty word is accepted, is enough to
-both decide membership and construct a deterministic automaton, provided expressions
-are identified up to a few simplifications so that only finitely many derivatives
-arise. Owens, Reppy and Turon re-examined the construction from a modern
-implementation perspective~\cite{OwensReppyTuron} and showed that it remains both
+expressions~\cite{B64}. He showed that differentiating an expression with respect to
+a symbol, together with a test for whether the empty word is accepted, is enough
+both to decide membership and to construct a deterministic automaton, provided
+expressions are identified up to a few simplifications so that only finitely many
+derivatives arise. Owens, Reppy and Turon re-examined the construction from a modern
+implementation perspective~\cite{OwensReppyTuron}. They showed that it remains both
 elegant and practical, particularly because it extends smoothly to intersection and
 complement. Derivatives are attractive precisely because the automaton is latent in
 the expression rather than assembled separately, which is also what makes the method
@@ -41,34 +41,32 @@ theory~\cite{CoquandRegexEquality} and its accompanying Rocq
 formalisation of Brzozowski derivatives~\cite{RocqRegexpBrzozowski}, carried out in
 the Rocq proof assistant~\cite{Rocq}. Mechanising this material forces every
 simplification and every finiteness argument to be made explicit, which is exactly
-where paper proofs tend to be informal, and it is the foundation on which the
+where paper proofs tend to be informal. It is also the foundation on which the
 similarity layer of the present work is added.
 
 The fuzzy side of the picture has its own substantial literature, though it has
-mostly grown from a different root. The dominant tradition equips automata and
-expressions with membership values rather than crisp acceptance, so that a word is
+mostly grown from a different root. Most of this work gives automata and
+expressions membership values rather than crisp acceptance, so a word is
 recognised to a degree. Li and Pedrycz studied fuzzy finite automata and fuzzy
 regular expressions with membership values in lattice-ordered
-monoids~\cite{LP06}, Stamenkovi\'c and \'Ciri\'c gave constructions of fuzzy automata
+monoids~\cite{LP05}, Stamenkovi\'c and \'Ciri\'c gave constructions of fuzzy automata
 from fuzzy regular expressions~\cite{SC12}, and Garhwal, Jiwari and Tomasiello
 surveyed fuzzy regular languages and fuzzy automata more broadly~\cite{GJT17}. A
 related quantitative and coalgebraic perspective appears in the quantitative Kleene
 coalgebras of Silva, Bonchi, Bonsangue and Rutten~\cite{SilvaBonchiBonsangueRutten2011}
 and, more recently, in the extension of the quantitative pattern-matching paradigm by
-Alves, Kesner and Ramos~\cite{AlvesKesnerRamos2025}. The technical backdrop for all
+Alves, Kesner and Ramos~\cite{AlvesKesnerRamos2025}. The technical background for all
 of this is the theory of triangular norms and fuzzy logic, of which Metcalfe's notes
-give a compact account~\cite{met05}.
+give a brief account~\cite{met05}.
 
 What is distinctive about the route taken here is the source of the fuzziness. Rather
 than attaching weights to transitions or to acceptance, this thesis keeps acceptance
-crisp and instead loosens the matching of symbols, so that a symbol matches any other
+crisp and instead loosens the matching of symbols. A symbol then matches any other
 symbol that is similar to it within a chosen threshold. This is the same move that
 Sessa made in approximate logic programming, where unification is replaced by
 matching up to a similarity relation~\cite{Sessa2002}, transposed from resolution to
 derivatives. The payoff is that, under the minimum T-norm, the fuzzy theory reduces
 to the crisp one over a quotient alphabet, which keeps the derivative machinery and
 its formalisation intact instead of requiring a separate weighted theory. The
-present work therefore connects the derivative-based and formally verified treatment
-of regular expressions with the similarity-based style of approximate matching, and
-the membership-value tradition cited above is the natural point of comparison for
-what such a similarity-based account does and does not capture.
+present work therefore connects the derivative-based, formally verified theory of
+regular expressions with similarity-based approximate matching.

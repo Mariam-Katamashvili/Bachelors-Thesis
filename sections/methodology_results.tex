@@ -1,22 +1,71 @@
 \section{Methodology and Results}\label{sec:methodology}
 
-This work proceeds in the style of theoretical computer science backed by formal
-verification: every notion is introduced by a precise definition, every claim is
-stated as a lemma or theorem with a proof, and a large part of the development is
-also mechanised in the Rocq proof assistant~\cite{Rocq}, so that the machine checks
-what the text argues by hand. Because the formalisation is central to the thesis, it
-is presented next to the mathematics rather than in a section of its own, and each
-mechanised definition or theorem is followed by the corresponding code quoted
-directly from the development~\cite{OurRocqRepo}. The presentation moves in two
-layers, first the crisp theory of derivatives and the derivative automaton, then the
-fuzzy layer that replaces exact symbol matching by cut-similarity. Throughout,
-$\Sigma$ denotes a finite, nonempty alphabet, $\varepsilon$ the empty word and
-$\Sigma^{*}$ the set of all words over $\Sigma$, with $r,s,t$ ranging over regular
-expressions, $a,b$ over symbols, $u,v,w$ over words and $L,K$ over languages.
+Rocq (until
+recently called Coq) is an interactive proof assistant built on a constructive
+dependent type theory, the Calculus of Inductive
+Constructions~\cite{CoquandHuet1988,CoqArt}, a descendant of Martin-L\"of's
+intuitionistic type theory~\cite{MartinLof1984}. What makes such a system able to
+check mathematics is the \emph{propositions-as-types} principle, also known as the
+Curry--Howard correspondence~\cite{Howard1980}. A proposition is read as a type, and
+a proof of that proposition is read as a \emph{term} (a program) whose type is
+exactly that proposition. Proving a statement therefore means constructing an object of the
+corresponding type, and a statement is regarded as true precisely when its type is
+inhabited.
+
+Under this reading the logical connectives become the type-forming operations of a
+functional programming language, so that proofs are literally functional programs.
+A proof of an implication $A \Rightarrow B$ is a function that turns any proof of
+$A$ into a proof of $B$; a proof of a conjunction $A \wedge B$ is a pair holding a
+proof of each conjunct; a proof of a disjunction $A \vee B$ is a tagged value that
+records which side holds together with a proof of it; a proof of a universal
+statement $\forall x.\,P(x)$ is a (dependent) function mapping each $x$ to a proof
+of $P(x)$; and a proof of an existential statement $\exists x.\,P(x)$ is a
+(dependent) pair consisting of a witness $a$ together with a proof of $P(a)$. This
+is the \emph{proofs-as-programs} paradigm. Because proofs are programs, they can be
+run, and the computation steps of the type theory correspond to the simplification
+of proofs. 
+
+Both paradigms depend on the logic being \emph{constructive}
+(intuitionistic) rather than classical. In
+intuitionistic logic a proof of $\exists x.\,P(x)$ must exhibit a witness,
+and a proof of $A \vee B$ must say which disjunct holds. This is what makes
+the corresponding proof terms carry the data a program needs in order to compute,
+namely the witness and the chosen branch. Classical logic abandons that discipline.
+Its principles, the law of excluded middle $A \vee \neg A$ and
+double-negation elimination $\neg\neg A \Rightarrow A$, are not theorems of
+intuitionistic logic. A classical proof of an existential need not produce any
+witness. One may prove that an object exists by deriving a contradiction from
+its non-existence, without ever naming it. Such a proof has no computational
+content, and there is no program to extract from it. Were Rocq founded on classical
+rather than intuitionistic logic, the propositions-as-types reading would survive
+only as a formal analogy. Proofs would no longer be programs that can be run. The
+witnesses and decision procedures this thesis relies on could not be obtained from
+the proofs that justify them, and the executable character of the formalisation
+would be lost. The constructive foundation is ergo not an incidental choice. It
+is what makes the formalised theory compute. (Classical axioms can be
+added to Rocq consistently when needed, but doing so reintroduces
+this loss of computational content, and the development does not use them.)
+
+In practice one rarely writes these proof terms by hand, because for any nontrivial
+statement the term is large. Instead Rocq is driven by \emph{tactics}, commands
+that build the proof term indirectly, working backwards from the goal. At each point
+the system displays a \emph{proof state} consisting of the hypotheses
+available and the goal still to be proved. Each tactic transforms that state,
+reducing the goal or splitting it into subgoals while assembling
+the corresponding fragment of the proof term. The tactics mirror the
+type-theoretic operations described above. For instance \texttt{intro} moves the
+premise of an implication into the hypotheses (introducing a function abstraction),
+\texttt{apply} uses an implication or lemma to reduce the goal to its premises
+(function application, \ie\ modus ponens), and \texttt{induction} invokes the
+induction principle of an inductive datatype. When every subgoal has been
+discharged, the command \texttt{Qed} submits the finished term to Rocq's
+kernel, which type-checks it independently. The tactics are only a
+way of producing the term. It is the kernel's check, not the tactic
+script, that is believed. The Rocq listings shown in this section are the
+statements and definitions from this process. The tactic
+scripts that prove them are available in the repository~\cite{OurRocqRepo}.
 
 \subsection{Preliminaries}\label{sec:prelim}
-
-The basic objects of the theory are the following.
 
 \begin{definition}[Alphabet, words, and languages]
 \mbox{}\\[-0.5em]
@@ -92,7 +141,7 @@ denotes the language of all words that end in $a$, since $(a+b)^{*}$ matches any
 prefix and the trailing $a$ fixes the last symbol. It is built only from $+$,
 $\cdot$ and ${}^{*}$ and so belongs to the restricted fragment $R^{\Sigma}$. By
 contrast $\neg(a\cdot b)$ denotes every word except $ab$, and $a\,\&\,(a+b)$ denotes
-$\{a\}$; both use $\neg$ or $\&$ and are therefore regular but not restricted.
+$\{a\}$; both use $\neg$ or $\&$ and are ergo not restricted, though still regular.
 
 In Rocq, regular expressions are an inductive datatype whose eight constructors
 correspond one-to-one to $\emptyset,\varepsilon,a,+,\cdot,{}^{*},\&,\neg$. The
@@ -144,8 +193,8 @@ Fixpoint den (r : regex) : pred word :=
 
 The language operations that \texttt{den} maps onto are defined in
 \texttt{Languages.v}. The empty language, the language of the empty word and the
-singleton are immediate, union, intersection and complement are the pointwise
-boolean connectives, and concatenation and Kleene star are decided by a bounded
+singleton are immediate. Union, intersection and complement are the pointwise
+boolean connectives. Concatenation and Kleene star are decided by a bounded
 search over the ways of splitting a word, using helper functions for splitting and
 for testing every block of a split.
 
@@ -222,16 +271,16 @@ Equivalently, $\nu$ is characterised by the following equations:
 \noindent\textbf{Example.} The expression $a^{*}$ is nullable, since
 $\varepsilon\in\mathcal{L}(a^{*})$, so $\nu(a^{*})=\varepsilon$. The expression
 $a\cdot a^{*}$ is not nullable, since every word it denotes has at least one $a$, so
-$\nu(a\cdot a^{*})=\emptyset$. For a choice the rule gives
+$\nu(a\cdot a^{*})=\emptyset$. For a union the rule gives
 $\nu(a+\varepsilon)=\nu(a)+\nu(\varepsilon)=\emptyset+\varepsilon=\varepsilon$.
 
 In the formalisation, nullability is the boolean function \texttt{has\_eps} and
-$\nu$ is \texttt{nu}. The test is not merely asserted to be correct: the lemma
+$\nu$ is \texttt{nu}. The lemma
 \texttt{nullable\_correct} proves, by induction on the expression, that
 \texttt{has\_eps} agrees with semantic membership of the empty word \texttt{[::]}
 in the language.
 
-\begin{lstlisting}[style=rocqstyle,caption={Nullability and its correctness (\texttt{Nullable.v}).},label={lst:nullable}]
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={Nullability and its correctness (\texttt{Nullable.v}).},label={lst:nullable}]
 (* Boolean test for whether ε belongs to the language of a regex. *)
 Fixpoint has_eps (r : regex) : bool :=
   match r with
@@ -250,6 +299,23 @@ Definition nu (r : regex) : regex :=
 
 (* The boolean test has_eps r agrees with the semantic definition of nullable [::] \in r. *)
 Lemma nullable_correct : forall r, has_eps r = ([::] \in r).
+Proof.
+  elim=> /=.
+  - by [].
+  - by [].
+  - by move=> a.
+  - move=> r1 IH1 r2 IH2; by rewrite IH1 IH2.
+  - move=> r1 IH1 r2 IH2.
+    rewrite IH1 IH2.
+    change (([::] \in r1) && ([::] \in r2) =
+            conc (den r1) (den r2) [::]).
+    by rewrite /conc (Languages.conc_nil (A:=A) (den r1) (den r2)).
+  - move=> r IH.
+    have H : star (den r) [::] := Languages.star_nil (A:=A) (den r).
+    by case: (star (den r) [::]) H.
+  - move=> r1 IH1 r2 IH2; by rewrite IH1 IH2.
+  - move=> r IH; by rewrite IH.
+Qed.
 \end{lstlisting}
 
 \begin{definition}[Semantic equivalence]\label{def:semantic-equivalence}
@@ -267,7 +333,7 @@ relations.
 Definition lang_eq (L K : language) : Prop := L =i K.
 Notation "L ≡ K" := (lang_eq L K) (at level 70).
 
-(* Two regexes are semantically equivalent when their denoted languages are equal. *)
+(* 2 regexes are semantically equivalent when their denoted languages are equal. *)
 Definition re_equiv (r s : regex) : Prop := r =i s.
 Notation "r ≈ s" := (re_equiv r s) (at level 70).
 \end{lstlisting}
@@ -277,15 +343,15 @@ semantically equivalent, $a\cdot(b+c)\equiv a\cdot b+a\cdot c$, because both den
 $\{ab,ac\}$, and likewise $a+b\equiv b+a$ since both denote $\{a,b\}$.
 
 \medskip
-Semantic equivalence is the relation that ultimately matters, but it is not
+Semantic equivalence is the relation that matters, but it is not
 finitely axiomatisable~\cite{Salomaa,Kozen} and is awkward to compute with
-directly. Following Brzozowski~\cite{B62} and Coquand and
+directly. Following Brzozowski~\cite{B64} and Coquand and
 Siles~\cite{CoquandRegexEquality}, the development instead uses a decidable,
 finitely generated approximation.
 
 \begin{definition}[Similarity and canonical form]\label{def:similarity}
 The \emph{similarity} relation $\sim$ on regular expressions is generated by the
-following equational laws. For choice it includes idempotence, commutativity and
+following equational laws. For union it includes idempotence, commutativity and
 associativity, together with the unit law for $\emptyset$:
 \[
   r+r \sim r, \qquad r+s \sim s+r, \qquad (r+s)+t \sim r+(s+t),
@@ -320,10 +386,32 @@ annihilation laws for $\emptyset$, and the unit laws for $\top := \neg\emptyset$
 Finally, complement is involutive, $\neg\neg r \sim r$.
 \end{definition}
 
+\begin{remark}[Two unrelated notions of ``similarity'']\label{rem:two-similarities}
+The word \emph{similarity} is used in this thesis for two entirely different
+relations, and they should not be conflated. The relation $\sim$ of
+Definition~\ref{def:similarity} is the one meant wherever ``similarity''
+appears without qualification in the crisp development of
+Sections~\ref{sec:prelim}--\ref{sec:dfa}. It is the \emph{Coquand--Siles
+similarity}~\cite{CoquandRegexEquality}, a structural, two-valued relation
+\emph{between regular expressions}, generated by the equational laws above and
+decided by comparing canonical forms. It changes nothing about symbol matching. It
+only identifies expressions that are equal up to associativity, commutativity,
+idempotence and the unit and annihilation laws. By contrast, the \emph{fuzzy similarity} 
+introduced later, in
+Section~\ref{sec:fuzzy-relations}, is a graded $[0,1]$-valued relation
+\emph{between alphabet symbols}, and, derived from it, between words, languages and
+expressions. It is the graded form of symbol equality that defines the fuzzy layer,
+and it is defined by a triangular norm rather than by equational laws. The two are
+independent. The crisp similarity $\sim$ is in force throughout the fuzzy
+development as well, where it continues to canonicalise expressions, while the fuzzy
+similarity acts on symbols. Where confusion is possible the qualifiers
+``Coquand--Siles'' (or ``structural'') and ``fuzzy'' (or ``graded'') are used.
+\end{remark}
+
 In Rocq the similarity relation is decided by normalising both expressions with a
 function \texttt{canonize} and comparing the results structurally. The normaliser
-is built from \emph{smart constructors} that bake the laws above into the way
-expressions are constructed; for instance \texttt{mkStar} realises
+is built from \emph{smart constructors} that build the laws above into the way
+expressions are constructed. For instance \texttt{mkStar} realises
 $\emptyset^{*}\sim\varepsilon$, $\varepsilon^{*}\sim\varepsilon$ and
 $(r^{*})^{*}\sim r^{*}$, while \texttt{mkPlus} (not shown) sorts and deduplicates
 its arguments to enforce associativity, commutativity and idempotence of $+$.
@@ -367,34 +455,66 @@ written $[r]$.
 \end{lemma}
 
 \begin{proof}
-This is the mechanised theorem \texttt{similar\_iff\_nf\_eq} of
+This is the formalised theorem \texttt{similar\_iff\_nf\_eq} of
 \texttt{CanonicalizationCorrectness.v}, in which $\mathsf{nf}$ is \texttt{canonize}
 and $\sim$ is the boolean \texttt{similar} of Listing~\ref{lst:canon}.
 \end{proof}
 
-\begin{lstlisting}[style=rocqstyle,caption={Canonicalisation/normalisation, mechanised (\texttt{CanonicalizationCorrectness.v}).},label={lst:canoncorrect}]
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={Canonicalisation/normalisation, formalised (\texttt{CanonicalizationCorrectness.v}).},label={lst:canoncorrect}]
 Theorem similar_iff_nf_eq (r s : regex) :
   similar r s <-> nf r = nf s.
+Proof.
+  split.
+  - move=> H.
+    exact: eq_regex_sound H.
+  - move=> H.
+    exact: eq_regex_complete H.
+Qed.
 \end{lstlisting}
 
 \begin{lemma}[Soundness of normalisation]\label{lem:similarity-sound}
-If $r \sim s$ then $\mathcal{L}(r)=\mathcal{L}(s)$, hence $r \equiv s$.
+If $r \sim s$ then $\mathcal{L}(r)=\mathcal{L}(s)$, ergo $r \equiv s$.
 \end{lemma}
 
 \begin{proof}
-This is the mechanised theorem \texttt{similar\_sound} of
+This is the formalised theorem \texttt{similar\_sound} of
 \texttt{CanonicalizationCorrectness.v}, where \texttt{re\_equiv} is the semantic
 equivalence of Listing~\ref{lst:equiv}. It rests on \texttt{canonize\_correct},
 which states that normalisation preserves the denoted language, so that
 $\mathcal{L}(\mathsf{nf}(r))=\mathcal{L}(r)$ for every $r$.
 \end{proof}
 
-\begin{lstlisting}[style=rocqstyle,caption={Soundness of normalisation, mechanised (\texttt{CanonicalizationCorrectness.v}).},label={lst:soundcorrect}]
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={Soundness of normalisation, formalised (\texttt{CanonicalizationCorrectness.v}).},label={lst:soundcorrect}]
 Theorem canonize_correct (r : regex) (w : word) :
   (w \in canonize r) = (w \in r).
+Proof.
+  elim: r w => [| |a |r1 IH1 r2 IH2 |r1 IH1 r2 IH2 |r IH |r1 IH1 r2 IH2 |r IH] w //=.
+  - (* Alt *)
+    rewrite (mkPlus_correct (canonize r1) (canonize r2) w).
+    by rewrite IH1 IH2.
+  - (* Seq *)
+    rewrite (mkConc_correct (canonize r1) (canonize r2) w).
+    exact: (Languages.conc_ext (A:=A) IH1 IH2 w).
+  - (* Star *)
+    rewrite (mkStar_correct (canonize r) w).
+    exact: (Languages.star_ext (A:=A) IH w).
+  - (* And *)
+    rewrite (mkAnd_correct (canonize r1) (canonize r2) w).
+    by rewrite IH1 IH2.
+  - (* Neg *)
+    rewrite (mkNot_correct (canonize r) w).
+    exact: ((RS.re_equiv_Neg IH) w).
+Qed.
 
 Theorem similar_sound (r s : regex) :
   similar r s -> r ≈ s.
+Proof.
+  move=> H w.
+  have Hcanon : canonize r = canonize s := eq_regex_sound H.
+  rewrite -(canonize_correct r w).
+  rewrite -(canonize_correct s w).
+  by rewrite Hcanon.
+Qed.
 \end{lstlisting}
 
 \noindent\textbf{Example.} Idempotence, commutativity and associativity of $+$ give
@@ -412,16 +532,15 @@ of $\mathsf{nf}$ and the two lemmas above build on the development of Coquand an
 Siles~\cite{CoquandRegexEquality}.
 
 \begin{remark}[Substitution and the boundary of regularity]\label{rem:substitution}
-The Kleene star is a restricted, tail-recursive form of iteration, and it is
-exactly this restriction that keeps it within the regular languages. It is
-instructive to see what happens when the restriction is lifted. Writing
+The Kleene star is a restricted, tail-recursive form of iteration, and this
+restriction is what keeps it within the regular languages. Writing
 $r[a]$ to highlight an occurrence of a symbol $a$ in $r$, and $r[s]$ for the
 expression obtained by substituting $s$ for that occurrence, one may define a
 general iteration $r[a]^{\#}$ by
 $\mathcal{L}(r[a]^{\#})=\{\varepsilon\}\cup\bigcup_{n\ge0}\mathcal{L}(r[a]^{\#}_{n})$,
 where $\mathcal{L}(r[a]^{\#}_{0})=\mathcal{L}(r[a])$ and
 $\mathcal{L}(r[a]^{\#}_{n+1})=\mathcal{L}(r[\,r[a]^{\#}_{n}\,])$. If the
-substitution is not tail-recursive this escapes the regular languages: for
+substitution is not tail-recursive this escapes the regular languages. For
 $r=a[a]b$ one obtains
 $\mathcal{L}(r[a]^{\#})=\{\varepsilon\}\cup\{a^{n+1}b^{n}\mid n\in\mathbb{N}\}$,
 which is not regular. This delimits the setting of the thesis, which stays with the
@@ -447,7 +566,7 @@ $\partial_{\varepsilon}(L)=L$.
 \end{definition}
 
 \noindent\textbf{Example.} Let $\Sigma=\{a,b\}$ and $L=\{aab,bb,baa,a\}$. Then
-$\partial_a(L)=\{ab,\varepsilon\}$: from $aab$ one obtains $ab$, from $a$ one obtains
+$\partial_a(L)=\{ab,\varepsilon\}$. From $aab$ one obtains $ab$, from $a$ one obtains
 $\varepsilon$, and $bb,baa$ are discarded because they do not start with $a$.
 
 \medskip
@@ -488,9 +607,9 @@ The derivative with respect to a word is $\mathcal{D}_\varepsilon(r)=r$ and
 $\mathcal{D}_{aw}(r)=\mathcal{D}_w(\mathcal{D}_a(r))$.
 \end{definition}
 
-This is the heart of the development. The symbol derivative $\mathcal{D}_a(\cdot)$
-is the function \texttt{D\_char}; note how the \texttt{Seq} clause reproduces
-exactly the product rule
+The symbol derivative $\mathcal{D}_a(\cdot)$
+is the function \texttt{D\_char}. The \texttt{Seq} clause reproduces
+the product rule
 $\mathcal{D}_a(r\cdot s)=\mathcal{D}_a(r)\cdot s + \nu(r)\cdot\mathcal{D}_a(s)$, with
 \texttt{nu r1} guarding the second summand. The word derivative \texttt{D} folds
 \texttt{D\_char} along the word.
@@ -520,7 +639,7 @@ canonicalises to $\varepsilon$. For the star,
 $\mathcal{D}_a(a^{*})=\mathcal{D}_a(a)\cdot a^{*}=\varepsilon\cdot a^{*}$, and this is
 similar to $a^{*}$ rather than syntactically equal to it,
 $\varepsilon\cdot a^{*}\sim a^{*}$. Continuing in the same way, every derivative of
-$a^{*}$ by a power of $a$ is again $a^{*}$ up to similarity, which is exactly why
+$a^{*}$ by a power of $a$ is again $a^{*}$ up to similarity, which is why
 canonicalisation collapses them to a single state in the automaton construction
 below.
 
@@ -536,20 +655,59 @@ For every regular expression $r$ over $\Sigma$ and every word $u\in\Sigma^{*}$,
 \end{theorem}
 
 \begin{proof}
-The correspondence is established by machine in Rocq, as the lemma
+The correspondence is established in Rocq, as the lemma
 \texttt{D\_correct} shown in Listing~\ref{lst:dcorrect}. It states that a word $w$
-lies in the derivative \texttt{D u r} exactly when \texttt{u ++ w} lies in $r$,
+is in the derivative \texttt{D u r} exactly when \texttt{u ++ w} is in $r$,
 which is the membership form of the equality
-$\mathcal{L}(\mathcal{D}_u(r))=\partial_u(\mathcal{L}(r))$. Its single-symbol core
+$\mathcal{L}(\mathcal{D}_u(r))=\partial_u(\mathcal{L}(r))$. The single-symbol case
 is \texttt{D\_char\_correct}, proved by structural induction on the expression with
-the \texttt{Seq} and \texttt{Star} cases doing the real work, and \texttt{D\_correct}
-follows from it by a short induction on the word.
+\texttt{Seq} and \texttt{Star} the main cases. From it \texttt{D\_correct}
+follows by a short induction on the word.
 \end{proof}
 
-\begin{lstlisting}[style=rocqstyle,caption={The correspondence theorem (\texttt{Derivatives.v}).},label={lst:dcorrect}]
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={The correspondence theorem (\texttt{Derivatives.v}).},label={lst:dcorrect}]
 Lemma D_char_correct : forall a r w, (w \in D_char a r) = ((a :: w) \in r).
+Proof.
+  move=> a; elim=> //=.
+
+  - (* Char *)
+    move=> b w.
+    rewrite /in_mem /=.
+    case: ifP=> [/eqP ->|hab] /=.
+    + by rewrite /eps /atom /Languages.eps /Languages.atom
+                 /= eqseq_cons eqxx /=.
+    + move/negPf: hab=>hab.
+      by rewrite /void /atom /Languages.void /Languages.atom
+                 /= eqseq_cons hab /=.
+
+  - (* Alt *)
+    move=> r1 IH1 r2 IH2 w.
+    rewrite /in_mem /= /plus /Languages.plus /=.
+    exact: (congr2 orb (IH1 w) (IH2 w)).
+
+  (* Seq and Star are the non-trivial cases. Seq splits a :: w as a
+     concatenation, the head symbol being consumed by D_a(r1) or, when
+     r1 is nullable, by D_a(r2); Star peels the first nonempty block
+     with star_cons_split and applies the induction hypothesis. The full
+     concP bookkeeping is in Derivatives.v (@\cite{OurRocqRepo}@). *)
+
+  - (* And *)
+    move=> r1 IH1 r2 IH2 w.
+    rewrite /in_mem /= /prod /Languages.prod /=.
+    exact: (congr2 andb (IH1 w) (IH2 w)).
+
+  - (* Neg *)
+    move=> r IHr w.
+    rewrite /in_mem /= /compl /Languages.compl /=.
+    exact: (congr1 negb (IHr w)).
+Qed.
 
 Lemma D_correct : forall u r w, (w \in D u r) = ((u ++ w) \in r).
+Proof.
+  elim=> [|a u IHu] r w //=.
+  rewrite IHu D_char_correct.
+  by rewrite -cat_cons.
+Qed.
 \end{lstlisting}
 
 A central consequence of the correspondence is that derivatives keep a regular
@@ -563,18 +721,28 @@ word $u\in\Sigma^{*}$.
 \begin{proof}
 In Rocq this is the theorem \texttt{derivative\_regular} of
 Listing~\ref{lst:regular}. A language is \texttt{regular} when it is denoted by
-some expression, that is, when \texttt{exists r, L =i den r}. If $r$ witnesses $L$,
+some expression, that is, when \texttt{exists r, L =i den r}. If $r$ denotes $L$,
 then Theorem~\ref{the:two-derivative-mapping}, in the form \texttt{D\_correct},
-makes $\mathcal{D}_u(r)$ a witness for $\partial_u(L)$, because
-$\partial_u(L)=\mathcal{L}(\mathcal{D}_u(r))$; hence $\partial_u(L)$ is again
+makes $\mathcal{D}_u(r)$ an expression that denotes $\partial_u(L)$, because
+$\partial_u(L)=\mathcal{L}(\mathcal{D}_u(r))$. Ergo $\partial_u(L)$ is again
 denoted by an expression and is regular.
 \end{proof}
 
-\begin{lstlisting}[style=rocqstyle,caption={Regularity of derivatives, mechanised (\texttt{Derivatives.v}).},label={lst:regular}]
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={Regularity of derivatives, formalised (\texttt{Derivatives.v}).},label={lst:regular}]
 Definition regular (L : language) : Prop := exists r : regex, L =i den r.
 
 Theorem derivative_regular (L : language) (u : word) :
   regular L -> regular (dlang u L).
+Proof.
+  move=> [r Hr].
+  exists (D u r) => w.
+  rewrite /dlang.
+  rewrite /dlang /in_mem /=.
+  have HL : L (u ++ w) = ((u ++ w) \in r).
+    by move: (Hr (u ++ w)); rewrite /in_mem /=.
+  rewrite HL.
+  by rewrite -(D_correct u r w).
+Qed.
 \end{lstlisting}
 
 \begin{theorem}[Finiteness of derivatives]\label{the:derivative-set-is-finite}
@@ -619,7 +787,7 @@ length of $u=a_1\cdots a_n$ from the product rule yields
 where the sum denotes a finite union via $+$. Each summand is built from a
 derivative of $p$ or of $q$ (the factors $\nu(\cdot)$ contribute only
 $\varepsilon$ or $\emptyset$), so by the induction hypothesis there are finitely
-many possible languages for each term and hence finitely many possible unions.
+many possible languages for each term and so finitely many possible unions.
 
 \emph{(3) Kleene star.} For $r=p^{*}$ induction on $n\ge 1$ shows that
 $\mathcal{D}_u(p^{*})$ is a finite union of terms $(\mathcal{D}_t(p))\cdot p^{*}$.
@@ -637,49 +805,36 @@ many such unions arise.
 
 \smallskip
 In every case the collection $\{\mathcal{L}(\mathcal{D}_u(r))\mid u\in\Sigma^{*}\}$
-is finite, and hence so is $\{\partial_u(L)\mid u\in\Sigma^{*}\}$.
+is finite, and so is $\{\partial_u(L)\mid u\in\Sigma^{*}\}$.
 \end{proof}
 
 \subsection{Finite Automata}\label{sec:dfa}
 
-The finiteness result of the previous subsection is exactly what makes it possible
-to turn a regular expression into a finite automaton: the canonical
-derivatives become the states and differentiation the transition function. Each state
-denotes the language that remains after some prefix of the input has been consumed,
-and the transitions are one-step derivatives, computed on canonical representatives
-so that the number of states stays finite.
+The finiteness result of the previous subsection lets us turn a regular
+expression into a finite automaton. The canonical derivatives are the states
+and differentiation is the transition function. Each state stands for the
+language left after reading some prefix of the input. We compute the
+transitions on canonical representatives, so the number of states stays
+finite.
 
 \begin{definition}[Derivative DFA]\label{def:deriv-dfa}
 Let $\mathsf{nf}(\cdot)$ be the normalisation of Lemma~\ref{def:canonize}, and write
-$[r]:=\mathsf{nf}(r)$. The \emph{derivative DFA} of a regular expression $r$ is the
-five-tuple $M=\langle Q,\Sigma,\delta,q_0,F\rangle$ whose components are the
-following.
-\begin{itemize}
-  \item $Q=\{\,[\,\mathcal{D}_u(r)\,]\mid u\in\Sigma^{*}\,\}$ is the set of states.
-        Each state is the canonical form $[t]=\mathsf{nf}(t)$ of a derivative of
-        $r$, so that two derivatives denoting similar expressions are the same
-        state.
-  \item $\Sigma$ is the input alphabet, the same finite alphabet over which $r$ is
-        written.
-  \item $\delta:Q\times\Sigma\to Q$ is the transition function, obtained by taking
-        a one-step derivative and canonicalising it,
-        \[
-          \delta(q,a)=[\,\mathcal{D}_a(q)\,].
-        \]
-  \item $q_0=[\,r\,]\in Q$ is the initial state, namely the canonical form of $r$
-        itself, which is consistent with $\mathcal{D}_\varepsilon(r)=r$.
-  \item $F\subseteq Q$ is the set of accepting states, those whose language
-        contains the empty word,
-        \[
-          F=\{\,q\in Q\mid \nu(q)=\varepsilon\,\}.
-        \]
-\end{itemize}
+$[r]:=\mathsf{nf}(r)$. The \emph{derivative DFA} of a regular expression $r$ is $M=\langle Q,\Sigma,\delta,q_0,F\rangle$ with
+\[
+  Q=\{\,[\,\mathcal{D}_u(r)\,]\mid u\in\Sigma^{*}\,\},\qquad
+  q_0=[\,r\,],\qquad
+  F=\{\,q\in Q\mid \nu(q)=\varepsilon\,\},
+\]
+\[
+  \delta(q,a)=[\,\mathcal{D}_a(q)\,],
+\]
+where $\Sigma$ is the alphabet of $r$.
 \end{definition}
 
 In Rocq the automaton is a dependent record whose state type \texttt{Q} is left
 abstract, with an initial state \texttt{q0}, a transition function \texttt{delta}
 and a boolean acceptance test \texttt{F}. The derivative DFA instantiates this
-record by taking the states to be regular expressions: the initial state is
+record by taking the states to be regular expressions. The initial state is
 \texttt{canonize r}, the transition canonicalises the one-step derivative
 \texttt{canonize (D\_char a q)}, and a state is accepting exactly when it is
 nullable, that is, when \texttt{has\_eps} holds of it.
@@ -699,41 +854,113 @@ Definition constructed_dfa (r : regex) : dfa :=
      F     := has_eps |}.
 \end{lstlisting}
 
-Because every state is stored in canonical form, two derivatives are recognised as
-the same state by syntactic equality of their normal forms, not by comparing the
-languages they denote. The algorithm below builds the automaton: it keeps taking
-derivatives and adds a new state each time it meets a canonical form it has not
-seen before.
+States are compared by structural equality of their normal forms, the boolean
+\texttt{regex\_eqb}, not by their languages. The construction keeps taking
+derivatives and adds a new state whenever it meets a canonical form it has not seen
+before. In Rocq, in \texttt{AutomataConstruction.v}, this is the recursive function
+\texttt{goto}. It computes the canonical derivative
+\texttt{q\_a := canonical\_derivative a q}, that is $[\mathcal{D}_a(q)]$. If
+\texttt{q\_a} is already among the discovered states it records the transition.
+Otherwise it adds \texttt{q\_a} and recurses on every symbol of the alphabet. The
+extra parameter \texttt{fuel} is discussed in Remark~\ref{rem:fuel} below.
 
-\begin{lstlisting}[style=thesiscode,label={lst:deriv-dfa},caption={Derivative-based DFA construction.}]
-goto(q, a, Q, delta):
-    q_a := [ D(a, q) ]
-    if q_a in Q then
-        delta[(q, a)] := q_a
-        return (Q, delta)
-    else
-        Q     := union(Q, { q_a })
-        delta := union(delta, (q, a) -> q_a)
-        for each a' in Sigma do
-            (Q, delta) := goto(q_a, a', Q, delta)
-        return (Q, delta)
-
-dfa(r):
-    q_0   := [ r ]
-    Q     := { q_0 }
-    delta := empty
-    for each a in Sigma do
-        (Q, delta) := goto(q_0, a, Q, delta)
-    F := { q in Q | nullable(q) }
-    return (Q, Sigma, delta, q_0, F)
+\begin{lstlisting}[style=rocqstyle,caption={The recursive exploration \texttt{goto} (\texttt{AutomataConstruction.v}).},label={lst:goto}]
+Fixpoint goto (fuel : nat) (q : state) (a : A)
+         (Q : seq state) (delta : seq transition)
+         {struct fuel} : seq state * seq transition :=
+  match fuel with
+  | 0 => (Q, delta)
+  | fuel'.+1 =>
+      let q_a := canonical_derivative a q in
+      if mem_state q_a Q then
+        (Q, add_transition q a q_a delta)
+      else
+        let Q1 := add_state q_a Q in
+        let delta1 := add_transition q a q_a delta in
+        let fix explore (Sigma : seq A) (Qacc : seq state)
+                        (deltaacc : seq transition) {struct Sigma}
+            : seq state * seq transition :=
+            if Sigma is a' :: Sigma' then
+              let '(Qnext, deltanext) := goto fuel' q_a a' Qacc deltaacc in
+              explore Sigma' Qnext deltanext
+            else (Qacc, deltaacc)
+        in explore alphabet Q1 delta1
+  end.
 \end{lstlisting}
 
-\paragraph*{Termination.}
+The driver \texttt{construct\_dfa} mirrors the abstract $\mathrm{dfa}(r)$ procedure.
+It starts from $q_0=[r]=\texttt{canonize r}$, runs \texttt{goto} from $q_0$ on every
+symbol, and marks the nullable states as accepting (\texttt{final\_states} keeps the
+ones where \texttt{has\_eps} holds). Where the abstract record of
+Listing~\ref{lst:dfadef} leaves the state type \texttt{Q} abstract, here the
+reachable states become a concrete list \texttt{Q : seq state} and the transitions a
+lookup table \texttt{delta : seq transition}. This is the finite realisation of that
+abstract automaton.
+
+\begin{lstlisting}[style=rocqstyle,caption={The driver \texttt{construct\_dfa} (\texttt{AutomataConstruction.v}).},label={lst:constructdfa}]
+Definition construct_dfa (fuel : nat) (r : regex) : dfa :=
+  let q0 := canonize r in
+  let fix build_from_initial (Sigma : seq A) (Q : seq state)
+                             (delta : seq transition) {struct Sigma}
+      : seq state * seq transition :=
+      if Sigma is a :: Sigma' then
+        let '(Qnext, deltanext) := goto fuel q0 a Q delta in
+        build_from_initial Sigma' Qnext deltanext
+      else (Q, delta)
+  in
+  let '(Q, delta) := build_from_initial alphabet [:: q0] [::] in
+  {| Q := Q;
+     Sigma := alphabet;
+     delta := delta;
+     q0 := q0;
+     F := final_states Q |}.
+\end{lstlisting}
+
+\begin{remark}[Termination]\label{rem:termination}
 Since $\Sigma$ is finite, the exploration branches finitely at each state.
 Moreover, Coquand and Siles~\cite{CoquandRegexEquality} show that the set of
 Brzozowski derivatives of any expression is finite with respect to $\sim$, and the
-states here are canonical representatives modulo $\sim$; hence only finitely many
-distinct states are ever discovered and the algorithm terminates.
+states here are canonical representatives modulo $\sim$. Ergo only finitely many
+distinct states are ever discovered, and the process stops as soon as no
+new canonical form appears. In a constructive setting ``finite'' is not a
+single notion, and the distinction matters in Rocq. The derivative set is finite up to
+the equivalence $\sim$, not up to syntactic equality. The Coquand--Siles result gives
+a covering list, so the set is Kuratowski-finite. That alone does not bound the number
+of distinct states, since the checker cannot count entries it cannot tell apart. One
+first needs decidable equality on canonical forms modulo $\sim$. This is exactly the
+decision procedure for regular expression equivalence in type theory of Coquand and
+Siles~\cite{CoquandRegexEquality}. With it the covering list collapses to a bijection
+with a prefix, so the set is inductively finite, and the number of canonical
+derivatives becomes an explicit decidable bound. That bound is what the termination
+argument uses.
+\end{remark}
+
+\begin{remark}[The \texttt{fuel} argument]\label{rem:fuel}
+The functions above carry an extra counter, \texttt{fuel}, that the abstract procedure
+does not need. Rocq requires it. Rocq accepts a recursive function only when it can see
+that the function stops, and it sees this by checking that each call works on a smaller
+piece of some input. The exploration does not fit this pattern. \texttt{goto} calls itself
+on the new derivative \texttt{q\_a}, which is not a smaller piece of anything it was given.
+We know it stops, because there are only finitely many states, but Rocq cannot see that
+on its own. The counter makes it visible. \texttt{goto} starts with some \texttt{fuel} and
+spends one unit each time it reaches a new state, and it stops when the fuel runs out. The
+fuel only goes down, so Rocq can tell the function stops.
+
+The amount of fuel does not affect correctness. When a transition is missing from the
+table, \texttt{step} computes $[\mathcal{D}_a(q)]$ directly instead, so
+\texttt{dfa\_correctness} holds for \emph{every} value of \texttt{fuel}. Too little fuel
+never gives a wrong language. It only leaves the table partial, and the missing
+transitions are computed on demand.
+
+It is enough to give \texttt{goto} as much fuel as there are reachable states. The fuel
+bounds how deep the search goes, not how many states it finds in all. Each step deeper
+reaches a state not seen before, so the deepest chain is no longer than the number of
+states. One unit is
+spent per new state, and the states found along one path are all different, so no path is
+longer than the number of states. That number is finite, so enough fuel always exists, and
+more fuel does no harm. In practice one picks an upper bound on the number of states and
+raises it until the set of discovered states stops growing.
+\end{remark}
 
 \begin{theorem}[DFA correctness]\label{the:dfa-correctness}
 Let $r$ be a regular expression over $\Sigma$, and let
@@ -754,14 +981,14 @@ This is proved in Rocq as the theorem \texttt{dfa\_correctness} of
 Listing~\ref{lst:dfa}, where \texttt{=i} (the language equality written $\equiv$ in
 the source) is extensional equality of language predicates. The run of the automaton
 on a word is the extended transition \texttt{delta\_star}. The proof reduces
-acceptance to membership in three rewrites:
+acceptance to membership in three rewrites.
 \texttt{nullable\_correct} turns the accepting test \texttt{has\_eps} into membership
 of the empty word, the lemma \texttt{delta\_star\_constructed\_lang} replaces the
 state reached after reading $u$ by the corresponding derivative, and
 \texttt{canonize\_correct\_local} discharges the remaining goal because normalisation
 preserves the denoted language.
 
-\begin{lstlisting}[style=rocqstyle,caption={The run of the automaton and the mechanised correctness proof (\texttt{Automata.v}).},label={lst:dfa}]
+\begin{lstlisting}[style=rocqstyle,caption={The run of the automaton and the formalised correctness proof (\texttt{Automata.v}).},label={lst:dfa}]
 Fixpoint delta_star (M : dfa) (q : Q M) (w : word) : Q M :=
     if w is a :: w' then @delta_star M (@delta M q a) w' else q.
 
@@ -778,15 +1005,11 @@ Theorem dfa_correctness (r : regex) :
   Qed.
 \end{lstlisting}
 
-Note that states are identified only up to canonical form, not up to full semantic
-equivalence. Two semantically equivalent expressions can therefore end up as
-distinct states: for instance $a^{*}$ and $(\varepsilon+a)^{*}$ denote the same
-language but have different canonical forms, so the construction keeps them apart.
-
 \medskip
 \noindent\textbf{Example.}
 Let $\Sigma=\{a,b\}$ and run the construction on the restricted regular expression
-$r=(a+b)^{*}\cdot a$. The algorithm of Listing~\ref{lst:deriv-dfa} starts from the
+$r=(a+b)^{*}\cdot a$. The construction of Listings~\ref{lst:goto}
+and~\ref{lst:constructdfa} starts from the
 initial state $q_0=[r]$ and, for each state it discovers, takes the canonical
 derivative with respect to every symbol. In the Rocq formulation each such step is
 \texttt{canonize (D\_char a q)}, and a state is accepting when \texttt{has\_eps}
@@ -826,25 +1049,16 @@ and the transition records its canonical form,
 $\delta(q_0,a)=[\mathcal{D}_a(r)]=(a+b)^{*}\cdot a + \varepsilon$, a canonical form
 not seen before, recorded as a new state $q_1$.
 
-Differentiating $q_0$ by $b$ instead,
+Differentiating $q_0$ by $b$ instead, the same rules give
 \[
-\begin{aligned}
 \mathcal{D}_b\bigl((a+b)^{*}\cdot a\bigr)
-  &= \mathcal{D}_b\bigl((a+b)^{*}\bigr)\cdot a
-     + \nu\bigl((a+b)^{*}\bigr)\cdot \mathcal{D}_b(a)\\
-  &= \bigl(\mathcal{D}_b(a+b)\cdot (a+b)^{*}\bigr)\cdot a
-     + \varepsilon\cdot \mathcal{D}_b(a)\\
-  &= \bigl((\emptyset+\varepsilon)\cdot (a+b)^{*}\bigr)\cdot a
-     + \varepsilon\cdot\emptyset,
-\end{aligned}
+  = \bigl((\emptyset+\varepsilon)\cdot (a+b)^{*}\bigr)\cdot a
+     + \varepsilon\cdot\emptyset.
 \]
-where $\mathcal{D}_b(a+b)=\emptyset+\varepsilon$ and $\mathcal{D}_b(a)=\emptyset$.
-Canonicalising with $\emptyset+\varepsilon\sim\varepsilon$,
-$\varepsilon\cdot(a+b)^{*}\sim(a+b)^{*}$, $\varepsilon\cdot\emptyset\sim\emptyset$ and
-$s+\emptyset\sim s$ gives $\mathcal{D}_b(r)\sim r$, so
+Canonicalising as before gives $\mathcal{D}_b(r)\sim r$, so
 $\delta(q_0,b)=[\mathcal{D}_b(r)]=[r]=q_0$, an already-known state.
 
-The only state still to process is $q_1=[(a+b)^{*}\cdot a + \varepsilon]$. By the sum
+The only state still to process is $q_1=[(a+b)^{*}\cdot a + \varepsilon]$. By the union
 rule and $\mathcal{D}_x(\varepsilon)=\emptyset$, the exact derivatives are
 \[
 \begin{aligned}
@@ -868,7 +1082,7 @@ It remains to mark the accepting states, those that are nullable. Here
 $\nu(q_0)=\nu((a+b)^{*})\,\&\,\nu(a)=\varepsilon\,\&\,\emptyset=\emptyset$, so $q_0$
 is not accepting, while
 $\nu(q_1)=\nu((a+b)^{*}\cdot a)+\nu(\varepsilon)=\emptyset+\varepsilon=\varepsilon$,
-so $q_1$ is accepting. The construction therefore returns the two-state automaton
+so $q_1$ is accepting. The construction ergo returns the two-state automaton
 with the transition table
 \[
 \begin{array}{c|cc|c}
@@ -897,54 +1111,30 @@ Each edge is a canonical one-step derivative, $\delta(q,x)=[\mathcal{D}_x(q)]$.}
 \label{fig:deriv-dfa}
 \end{figure}
 
-The effect of canonicalisation on the size of the automaton is seen most clearly on
-a tiny instance.
-
 \medskip
 \noindent\textbf{Example (with and without canonicalisation).}
+This example shows exactly why canonicalisation matters.
 Take $\Sigma=\{a\}$ and $r=a^{*}$.
 
-With canonicalisation, the start state is $q_0=[a^{*}]=a^{*}$, and its one-step
-derivative on $a$ is
-\[
-  \mathcal{D}_a(a^{*})=\mathcal{D}_a(a)\cdot a^{*}=\varepsilon\cdot a^{*}\;\sim\;a^{*},
-\]
-so $\delta(q_0,a)=[\mathcal{D}_a(a^{*})]=[a^{*}]=q_0$. The canonical derivative is the
-start state again, the worklist empties immediately, and the construction returns the
-one-state automaton of Figure~\ref{fig:canon-yes}: a single accepting state with a
-self-loop on $a$, recognising $\mathcal{L}(a^{*})$.
+With canonicalisation, the start state is $q_0=[a^{*}]=a^{*}$, and
+$\mathcal{D}_a(a^{*})=\varepsilon\cdot a^{*}\sim a^{*}$, so
+$\delta(q_0,a)=[a^{*}]=q_0$. The queue empties at once and the construction returns
+the one-state automaton.
 
-Without canonicalisation, states are compared as raw syntax. Reading $a$ once gives
-the derivative $s_1=\varepsilon\cdot a^{*}$, which denotes the same language as
-$a^{*}$ and is similar to it, but is a different expression, so it becomes a new
-state. Reading a further $a$ gives
-\[
-  \mathcal{D}_a(s_1)
-  = \mathcal{D}_a(\varepsilon)\cdot a^{*} + \nu(\varepsilon)\cdot\mathcal{D}_a(a^{*})
-  = \emptyset\cdot a^{*} + \varepsilon\cdot(\varepsilon\cdot a^{*})
-  =: s_2,
-\]
-larger still and again distinct, then $s_3=\mathcal{D}_a(s_2)$ larger again, and so on.
-Every $s_i$ denotes $a^{*}$ and every pair is similar, yet no two are syntactically
-equal, so the construction keeps inventing states and never terminates, as suggested
-by Figure~\ref{fig:canon-no}. Canonicalisation is exactly what collapses the whole
-chain $a^{*},\,\varepsilon\cdot a^{*},\,s_2,\,\ldots$ to the single representative
-$a^{*}$, turning the unbounded chain of Figure~\ref{fig:canon-no} into the one-state
-automaton of Figure~\ref{fig:canon-yes}.
-
-\begin{figure}[h]
-\centering
+\begin{center}
 \begin{tikzpicture}[->,>={Stealth[round]},shorten >=1pt,auto,semithick,initial text=]
   \node[state,initial,accepting] (q0) {$q_0$};
   \path (q0) edge[loop right] node {$a$} (q0);
 \end{tikzpicture}
-\caption{With canonicalisation: the derivative automaton of $a^{*}$ over
-$\Sigma=\{a\}$ has the single accepting state $q_0=[a^{*}]$ with a self-loop on $a$.}
-\label{fig:canon-yes}
-\end{figure}
+\end{center}
 
-\begin{figure}[h]
-\centering
+Without canonicalisation, states are compared as raw syntax. Reading $a$ gives
+$s_1=\varepsilon\cdot a^{*}$, then $s_2=\mathcal{D}_a(s_1)$, then $s_3$, each larger
+than the last. Every $s_i$ denotes $a^{*}$ and every pair is similar, yet no two are
+syntactically equal, so the construction never terminates. Canonicalisation collapses
+this chain to the single representative $a^{*}$.
+
+\begin{center}
 \begin{tikzpicture}[->,>={Stealth[round]},shorten >=1pt,auto,semithick,
                     initial text=,node distance=2.5cm]
   \node[state,initial,accepting] (q0) {$a^{*}$};
@@ -957,12 +1147,7 @@ $\Sigma=\{a\}$ has the single accepting state $q_0=[a^{*}]$ with a self-loop on 
         (s2) edge node {$a$} (s3)
         (s3) edge node {$a$} (dots);
 \end{tikzpicture}
-\caption{Without canonicalisation: reading $a$ repeatedly produces an unbounded chain
-of distinct raw derivatives $a^{*},\ s_1=\varepsilon\cdot a^{*},\ s_2,\ \ldots$, all
-denoting $a^{*}$ and pairwise similar but never syntactically equal, so the
-construction does not terminate.}
-\label{fig:canon-no}
-\end{figure}
+\end{center}
 
 \subsection{Fuzzy Proximity and Similarity Relations}\label{sec:fuzzy-relations}
 
@@ -981,18 +1166,14 @@ for all $x,y,z\in[0,1]$:
 \end{enumerate}
 \end{definition}
 
-\noindent\textbf{Example.} Three standard T-norms are Gödel's minimum
-$x\otimes y=\min(x,y)$, the product $x\otimes y=x\cdot y$, and the {\L}ukasiewicz
-T-norm $x\otimes y=\max(0,x+y-1)$. Each satisfies the four axioms, for instance
-$\min(x,1)=x$, $x\cdot 1=x$ and $\max(0,x+1-1)=x$ realise the neutral element. Only
-Gödel's minimum is idempotent ($\min(x,x)=x$ for every $x$), a property that will
-matter when cuts are formed below; this is the T-norm the thesis works with.
+\noindent We work with Gödel's T-norm.
 
 \medskip
-The development formalises a T-norm as a record \texttt{T\_norm} bundling exactly
-the axioms above, together with closedness on $[0,1]$, and provides Gödel's minimum
-\texttt{smin} as the instance \texttt{godel\_t\_norm}, whose record fields are
-discharged by the corresponding lemmas about \texttt{smin}.
+The development formalises a T-norm as a record \texttt{T\_norm} bundling
+the axioms above, together with the requirement that the operation maps $[0,1]$ back
+into $[0,1]$, and provides Gödel's minimum \texttt{smin} as the instance
+\texttt{godel\_t\_norm}, whose record fields are proved by the corresponding lemmas
+about \texttt{smin}.
 
 \begin{lstlisting}[style=rocqstyle,caption={T-norms and Gödel's minimum (\texttt{SimilarityRelations.v}).},label={lst:tnorm}]
 Definition simval := R.
@@ -1056,7 +1237,7 @@ with respect to $\otimes$:
 \end{definition}
 
 With Gödel's minimum T-norm as $\otimes$, the symbol $\min$ is often written instead
-of $\otimes$. These notions are exactly those used in similarity-based approximate
+of $\otimes$. These notions are those used in similarity-based approximate
 reasoning~\cite{Sessa2002}. In Rocq the cut is \texttt{mu\_cut}, a proximity is the
 record \texttt{is\_proximity}, and a similarity relation with respect to a given
 T-norm \texttt{T} is the record \texttt{is\_T\_similarity T}, which records that
@@ -1068,7 +1249,7 @@ $\mathcal{R}(x,x)=1$ for every $x$, $\mathcal{R}(a,c)=\mathcal{R}(c,a)=0.9$,
 $\mathcal{R}(b,d)=\mathcal{R}(d,b)=0.75$, and $0$ to every other distinct pair. This
 $\mathcal{R}$ is a proximity relation, since it is reflexive and symmetric, and a
 similarity relation under the minimum, since the only nontrivial chains pass through
-a repeated symbol. Its cut depends on the threshold: at $\mu=0.8$ the cut
+a repeated symbol. Its cut depends on the threshold. At $\mu=0.8$ the cut
 $\mathcal{R}_{0.8}$ relates $a$ with $c$ but leaves $b$ and $d$ apart, whereas at
 $\mu=0.7$ the cut $\mathcal{R}_{0.7}$ relates both $a$ with $c$ and $b$ with $d$.
 
@@ -1123,11 +1304,6 @@ on words $\mathcal{R}^{w}:\Sigma^{*}\times\Sigma^{*}\to[0,1]$ by
 \]
 \end{definition}
 
-In Rocq this is the recursive function \texttt{Rw\_T}, parameterised by the T-norm
-\texttt{T}: it is $1$ on two empty words, $0$ when exactly one is empty, and
-otherwise the T-norm combination of the head similarity and the recursively
-computed tail similarity. With Gödel's minimum this is the minimum recursion.
-
 \noindent\textbf{Example.} With the base relation $\mathcal{R}$ of the previous
 example and the minimum T-norm,
 $\mathcal{R}^{w}(ab,cd)=\min(\mathcal{R}(a,c),\mathcal{R}(b,d))=\min(0.9,0.75)=0.75$,
@@ -1157,12 +1333,6 @@ $\mathcal{R}^{L}:\mathcal{P}(\Sigma^{*})\times\mathcal{P}(\Sigma^{*})\to[0,1]$ b
 \]
 \end{definition}
 
-In Rocq this is \texttt{RL\_T}, the minimum of the two directions of an infimum of
-suprema of word similarities; the supremum and infimum of a function over a
-language are \texttt{SupL} and \texttt{InfL}, each taking a proof that the family is
-bounded. The outer combination is the minimum, while the inner word similarity
-\texttt{Rw\_T T} carries the chosen T-norm.
-
 \noindent\textbf{Example.} Continuing with the same $\mathcal{R}$ and the minimum,
 compare $L_1=\{ab\}$ and $L_2=\{cd,cb\}$. In the direction from $L_1$, the single
 word $ab$ has $\sup\{\mathcal{R}^{w}(ab,cd),\mathcal{R}^{w}(ab,cb)\}=\max(0.75,0.9)=0.9$,
@@ -1187,7 +1357,7 @@ Definition RL_T (L1 L2 : language) : simval :=
       (outer_T_lower_bounded_right L1 L2)).
 \end{lstlisting}
 
-Viewing words as regular expressions, Definition~\ref{def:Rw} extends naturally to
+Viewing words as regular expressions, Definition~\ref{def:Rw} extends to
 regular expressions when Gödel's T-norm is used.
 
 \begin{definition}[Similarity on regular expressions, Gödel's T-norm]\label{def:Rexp-godel}
@@ -1203,7 +1373,7 @@ regular expressions $\mathcal{G}^{E}:E^{\Sigma}\times E^{\Sigma}\to[0,1]$ by
 \]
 \end{definition}
 
-In Rocq this is the recursive function \texttt{GE}: it recurses on the shape of the
+In Rocq this is the recursive function \texttt{GE}. It recurses on the shape of the
 two expressions, returns the base similarity \texttt{R} on letters, the minimum on
 matching binary shapes, and $0$ when the shapes differ.
 
@@ -1240,16 +1410,6 @@ Fixpoint GE (r s : regex) : simval :=
       | RS.Alt r1 r2 => smin (GE r1 s1) (GE r2 s2)
       | _ => 0
       end
-  | RS.And s1 s2 =>
-      match r with
-      | RS.And r1 r2 => smin (GE r1 s1) (GE r2 s2)
-      | _ => 0
-      end
-  | RS.Neg s1 =>
-      match r with
-      | RS.Neg r1 => GE r1 s1
-      | _ => 0
-      end
   end.
 \end{lstlisting}
 
@@ -1266,7 +1426,7 @@ p+\dfrac{(x-p)(y-p)}{1-p} & x,y\ge p;\\[1.0ex]
 \min(x,y) & \text{otherwise,}
 \end{cases}
 \]
-where $p\in[0,1]$. Definition~\ref{def:Rexp-godel} therefore has to be
+where $p\in[0,1]$. Definition~\ref{def:Rexp-godel} ergo has to be
 conservatively extended.
 
 \begin{definition}[Similarity on regular expressions, general T-norm]\label{def:Re}
@@ -1288,13 +1448,12 @@ similarity on $\Sigma$. Define inductively the proximity relation
 \]
 \end{definition}
 
-The clause for $(\ )^{*}$ is rather strict for a general T-norm, but no definition
+The clause for $(\ )^{*}$ is strict for a general T-norm, but no definition
 for a general T-norm seems reasonable unless it is replaced by a finite union. In
 Rocq this is the recursive function \texttt{RE\_T}, parameterised by the T-norm
-\texttt{T}: the choice and concatenation clauses both combine the subexpression
-values with \texttt{tnorm T}, the star clause uses \texttt{tnorm\_power\_inf T},
-the infimum of the T-norm powers $\inf_n(\bigotimes^{n}x)$, and intersection and
-complement are sent to $0$ since the fragment is restricted. Under Gödel's minimum,
+\texttt{T}. The union and concatenation clauses both combine the subexpression
+values with \texttt{tnorm T}, and the star clause uses \texttt{tnorm\_power\_inf T},
+the infimum of the T-norm powers $\inf_n(\bigotimes^{n}x)$. Under Gödel's minimum,
 which is idempotent, \texttt{tnorm\_power\_inf} collapses to the identity and
 \texttt{RE\_T} reduces to \texttt{GE}.
 
@@ -1331,8 +1490,6 @@ Fixpoint RE_T (r s : regex) {struct s} : simval :=
       | RS.Star r1 => tnorm_power_inf T (RE_T r1 s1)
       | _ => 0
       end
-  | RS.And _ _ => 0
-  | RS.Neg _ => 0
   end.
 \end{lstlisting}
 
@@ -1343,14 +1500,14 @@ and $\mathcal{R}^{e}(a\cdot b,\,c\cdot b)=\min(0.9,1)=0.9$, while a star gives
 $\mathcal{R}^{e}(a^{*},c^{*})=\mathcal{R}(a,c)=0.9$ because the minimum is
 idempotent. When the shapes differ the value is $0$, for instance
 $\mathcal{R}^{e}(a\cdot b,\,c+d)=0$ since one expression is a concatenation and the
-other a choice.
+other a union.
 
 \medskip
 The three constructions are all similarity relations.
 
 \begin{lemma}\label{lem:sim-relations}\mbox{}
 \begin{enumerate}
-\item $\mathcal{R}^{e}$ is a similarity relation on $E^{\Sigma}$, and hence on
+\item $\mathcal{R}^{e}$ is a similarity relation on $E^{\Sigma}$, and therefore on
 restricted regular expressions;
 \item $\mathcal{R}^{w}$ is a similarity relation on $\Sigma^{*}$;
 \item $\mathcal{R}^{L}$ is a similarity relation on languages.
@@ -1358,29 +1515,20 @@ restricted regular expressions;
 \end{lemma}
 
 \begin{proof}
-All three are mechanised, and bundled together in the single lemma
+All three are formalised, and bundled together in the lemma
 \texttt{general\_\allowbreak similarity\_\allowbreak relations} of
-Listing~\ref{lst:simproofs}: for any
+Listing~\ref{lst:simproofs}. Fix any
 T-norm \texttt{T} that is left-continuous and with respect to which the base
-relation \texttt{R} is transitive, $\mathcal{R}^{e}$ (as \texttt{RE\_T}),
-$\mathcal{R}^{w}$ (as \texttt{Rw\_T}) and $\mathcal{R}^{L}$ (as \texttt{RL\_T}) are
-all $T$-similarity relations. The individual proofs \texttt{RE\_T\_is\_similarity},
-\texttt{Rw\_T\_is\_similarity} and \texttt{RL\_T\_is\_similarity} go by induction: on
-the length of the words for $\mathcal{R}^{w}$ (the transitivity step combines the
-head and tail bounds through monotonicity of the T-norm), on the common shape of
-the two expressions for $\mathcal{R}^{e}$, and, for $\mathcal{R}^{L}$, from the
-word-level result together with the least-upper-bound and greatest-lower-bound
-properties of \texttt{SupL} and \texttt{InfL}.
+relation \texttt{R} is transitive. Then $\mathcal{R}^{e}$, $\mathcal{R}^{w}$ and
+$\mathcal{R}^{L}$ are all $T$-similarity relations. Each is proved by induction.
+For words the induction is on the length, and transitivity follows because the
+head and the tail can be combined through the monotonicity of the T-norm. For
+expressions the induction is on the shape that the two share. For languages the
+result is read off from the word case, using that a language similarity is built
+from suprema and infima of word similarities.
 \end{proof}
 
-\begin{lstlisting}[style=rocqstyle,caption={The three similarity relations, mechanised (\texttt{SimilarityRelations.v}).},label={lst:simproofs}]
-Definition restricted_regex_type :=
-  { r : regex | RS.restricted_regex r }.
-
-Definition RE_T_restricted
-  (r s : restricted_regex_type) : simval :=
-  RE_T (proj1_sig r) (proj1_sig s).
-
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={The three similarity relations, formalised (\texttt{SimilarityRelations.v}).},label={lst:simproofs}]
 (* Similarity relations on restricted regular expressions, words, and languages. *)
 Lemma general_similarity_relations :
   forall T,
@@ -1389,33 +1537,12 @@ Lemma general_similarity_relations :
     @is_T_similarity restricted_regex_type T (RE_T_restricted T) /\
     @is_T_similarity word T (Rw_T T) /\
     @is_T_similarity language T (RL_T T).
+(* Proof in SimilarityRelations.v of the repository (@\cite{OurRocqRepo}@). *)
 \end{lstlisting}
-
-The syntactic similarity is, in general, only a lower bound for the semantic one.
-
-\begin{theorem}[Syntax--semantics inequality]\label{thm:Rr-RL-bridge}
-For all restricted regular expressions $r_1$ and $r_2$,
-\[
-  \mathcal{R}^{e}(r_1,r_2)\le\mathcal{R}^{L}\bigl(\mathcal{L}(r_1),\mathcal{L}(r_2)\bigr).
-\]
-\end{theorem}
-
-\begin{proof}
-Fix words $w_1\in\mathcal{L}(r_1)$ and $w_2\in\mathcal{L}(r_2)$ obtained by reading
-the same syntactic positions of $r_1$ and $r_2$. Comparing position by position,
-$\mathcal{R}^{e}(r_1,r_2)\le\mathcal{R}^{w}(w_1,w_2)$, because on a matching shape the
-value of $\mathcal{R}^{e}$ is the T-norm combination of the symbol similarities,
-which is exactly what $\mathcal{R}^{w}$ computes for the corresponding words. Now
-$\mathcal{R}^{L}(\mathcal{L}(r_1),\mathcal{L}(r_2))$ is the minimum of two infima of
-suprema of word similarities; in each direction the inner supremum over the opposite
-language is at least $\mathcal{R}^{w}(w_1,w_2)$, so the outer infimum is bounded below
-by $\mathcal{R}^{e}(r_1,r_2)$. Hence
-$\mathcal{R}^{e}(r_1,r_2)\le\mathcal{R}^{L}(\mathcal{L}(r_1),\mathcal{L}(r_2))$.
-\end{proof}
 
 \begin{remark}\label{rem:syntax-sensitive}\mbox{}
 \begin{enumerate}
-\item Definition~\ref{def:Re} is syntax-sensitive: two regular expressions may
+\item Definition~\ref{def:Re} is syntax-sensitive. Two regular expressions may
 denote the same language while having low, or even zero, $\mathcal{R}^{e}$-similarity.
 For example, depending on the base relation, $\mathcal{R}^{e}(a+b,b+a)=0$ even though
 $\mathcal{L}(a+b)=\mathcal{L}(b+a)$.
@@ -1428,7 +1555,8 @@ $\mathcal{R}^{e}(a+b,a+b)=1$.
 setting $\mathcal{R}^{e}(r_1,s)=\mathcal{R}^{e}(r_2,s)$ whenever
 $\mathsf{nf}(r_1)=\mathsf{nf}(r_2)$, but no exhaustive finitary definition is
 possible, and this is not pursued here.
-\item Theorem~\ref{thm:Rr-RL-bridge} fails once $\&$ and $\neg$ are allowed. If
+\item The bound $\mathcal{R}^{e}(r_1,r_2)\le\mathcal{R}^{L}(\mathcal{L}(r_1),\mathcal{L}(r_2))$
+fails once $\&$ and $\neg$ are allowed. If
 $\mathcal{R}(a,b)\gneq 0$ but $a\neq b$, then $\mathcal{L}(a\,\&\,b)=\emptyset$, so
 $\mathcal{R}^{L}(\mathcal{L}(a\,\&\,a),\mathcal{L}(a\,\&\,b))=0$, whereas a
 shape-based value $\mathcal{R}^{e}(a\,\&\,a,a\,\&\,b)=\mathcal{R}(a,b)>0$. This is
@@ -1436,28 +1564,25 @@ why the fuzzy theory is confined to the restricted fragment $R^{\Sigma}$.
 \end{enumerate}
 \end{remark}
 
-Finally, a finiteness property of syntactic similarity is what keeps the fuzzy
-derivative finite.
-
 \begin{lemma}[Finite syntactic similarity]\label{lem:finite-syntactic}
 If $\Sigma$ is finite, then for every restricted regular expression $r$ the set
 $\{\,s \mid \mathcal{R}^{e}(s,r)\neq 0\,\}$ is finite.
 \end{lemma}
 
 \begin{proof}
-This is mechanised as the lemma \texttt{finite\_syntactic\_similarity} of
-Listing~\ref{lst:finite}. The development builds an explicit finite list
+This is formalised as the lemma \texttt{finite\_syntactic\_similarity} of
+Listing~\ref{lst:finite}. The development builds a finite list
 \texttt{syntactic\_similarity\_candidates alphabet r}, which enumerates all
 expressions sharing the outermost shape of $r$ with letters drawn from the
 alphabet, and proves, by induction on the derivation that $r$ is restricted, that
 every $s$ with $\mathcal{R}^{e}(s,r)\neq 0$ (that is, $\texttt{RE\_T}\ T\ s\ r\neq0$)
 belongs to that list. The base cases use that for letters only the finitely many
 $b$ with $\mathcal{R}(b,a)\neq 0$ qualify, and the inductive cases use that the
-T-norm is non-zero only when both arguments are; since the candidate list is finite,
+T-norm is non-zero only when both arguments are. Since the candidate list is finite,
 so is $\{s\mid\mathcal{R}^{e}(s,r)\neq 0\}$.
 \end{proof}
 
-\begin{lstlisting}[style=rocqstyle,caption={Finiteness of syntactic similarity, mechanised (\texttt{SimilarityRelations.v}).},label={lst:finite}]
+\begin{lstlisting}[style=rocqstyle,escapeinside={(@}{@)},caption={Finiteness of syntactic similarity, formalised (\texttt{SimilarityRelations.v}).},label={lst:finite}]
 Fixpoint syntactic_similarity_candidates
   (alphabet : list A) (r : regex) : list regex :=
   match r with
@@ -1479,8 +1604,6 @@ Fixpoint syntactic_similarity_candidates
   | RS.Star r1 =>
       List.map RS.Star
         (syntactic_similarity_candidates alphabet r1)
-  | RS.And _ _ => nil
-  | RS.Neg _ => nil
   end.
 
 (* Finite Syntactic Similarity *)
@@ -1491,19 +1614,17 @@ Lemma finite_syntactic_similarity :
     forall s,
       RE_T T s r <> 0 ->
       List.In s (syntactic_similarity_candidates alphabet r).
+(* Proof in SimilarityRelations.v of the repository (@\cite{OurRocqRepo}@). *)
 \end{lstlisting}
 
 
 \subsection{Fuzzy Derivatives and Fuzzy Automata}\label{sec:fuzzy-derivatives}
 
-The derivative now lifts to the fuzzy setting. Comparing only the consumed
-symbol with the first symbol of a word in the language would be too narrow: in a
+The derivative now carries over to the fuzzy setting. Comparing only the consumed
+symbol with the first symbol of a word in the language would be too narrow. In a
 similarity-based setting the remaining suffix should also be matched up to the same
-cut, so the whole word is matched. The similarity infrastructure of
-Section~\ref{sec:fuzzy-relations} is mechanised in Rocq, but the fuzzy derivative
-and the fuzzy automaton developed in this section are so far established on paper;
-carrying them into Rocq on top of that infrastructure is ongoing research and is
-taken up again as future work in Section~\ref{sec:conclusion}.
+cut, so the whole word is matched. Formalising the fuzzy derivative and the fuzzy
+automaton in Rocq is ongoing research.
 
 \begin{definition}[Fuzzy language derivative]\label{def:fuzzy-deriv-lang}
 Let $\mathcal{L}\subseteq\Sigma^{*}$, $a\in\Sigma$ and $0<\mu\le1$. The
@@ -1551,7 +1672,7 @@ language and of a restricted regular expression with respect to $u$ are
 with $\mathcal{D}_\varepsilon^{\mu}(r)=r$.
 \end{definition}
 
-Both expression derivatives are purely syntactic: by
+Both expression derivatives are syntactic. By
 Lemma~\ref{lem:finite-syntactic} the summands in the sums are finite, so
 $\mathcal{D}_u^{\mu}(r)$ is a well-defined restricted regular expression.
 
@@ -1574,21 +1695,6 @@ on symbols, restricted expressions, words and languages respectively, is an
 equivalence relation. Moreover $a_1\cdots a_n\sim_\mu^{\Sigma^{*}} b_1\cdots b_m$ if
 and only if $n=m$ and $a_i\sim_\mu^{\Sigma} b_i$ for every $i$.
 \end{proposition}
-
-\begin{proof}
-Each of $\mathcal{R},\mathcal{R}^{w},\mathcal{R}^{e},\mathcal{R}^{L}$ is a similarity
-relation (Lemma~\ref{lem:sim-relations}): reflexive with diagonal value $1$,
-symmetric, and transitive with respect to the minimum. Reflexivity gives the
-diagonal value $1\ge\mu$, so each cut relation is reflexive; symmetry of the
-underlying relation gives symmetry of the cut; and for transitivity, if
-$\mathcal{R}(x,y)\ge\mu$ and $\mathcal{R}(y,z)\ge\mu$ then, by the reverse triangle
-inequality, $\mathcal{R}(x,z)\ge\min(\mathcal{R}(x,y),\mathcal{R}(y,z))\ge\mu$. The
-same three steps apply verbatim to $\mathcal{R}^{w}$, $\mathcal{R}^{e}$ and
-$\mathcal{R}^{L}$. The letterwise characterisation follows from
-$\mathcal{R}^{w}(a_1\cdots a_n,b_1\cdots b_m)=\min_{1\le i\le n}\mathcal{R}(a_i,b_i)$
-when $n=m$, and $0$ otherwise: the minimum is at least $\mu$ exactly when every
-factor is.
-\end{proof}
 
 Under the minimum, the condition $\mathcal{R}(a,b)\otimes\mathcal{R}^{w}(w,v)\ge\mu$
 splits into $\mathcal{R}(a,b)\ge\mu$ and $\mathcal{R}^{w}(w,v)\ge\mu$, that is
@@ -1614,7 +1720,7 @@ $\mathcal{L}^{\mu}:=q_\mu^{*}(\mathcal{L})=\{q_\mu^{*}(w)\mid w\in\mathcal{L}\}
 \subseteq(\Sigma^{\mu})^{*}$.
 \end{definition}
 
-The next theorem is the key structural fact: once letters are identified up to
+Once letters are identified up to
 $\mu$-similarity, the fuzzy derivative becomes an ordinary derivative over the
 quotient alphabet.
 
@@ -1623,7 +1729,7 @@ For every language $\mathcal{L}\subseteq\Sigma^{*}$ and every $a\in\Sigma$,
 \[
 \partial_a^{\mu}(\mathcal{L})
 = \{\,w\in\Sigma^{*}\mid q_\mu^{*}(w)\in\partial_{[a]_\mu}(\mathcal{L}^{\mu})\,\},
-\qquad\text{hence}\qquad
+\qquad\text{ergo}\qquad
 q_\mu^{*}\bigl(\partial_a^{\mu}(\mathcal{L})\bigr)=\partial_{[a]_\mu}\bigl(\mathcal{L}^{\mu}\bigr).
 \]
 \end{theorem}
@@ -1641,7 +1747,7 @@ $q_\mu^{*}(w)\in\partial_{[a]_\mu}(\mathcal{L}^{\mu})$. Then
 $[a]_\mu\, q_\mu^{*}(w)\in\mathcal{L}^{\mu}$, so there is a word $bv\in\mathcal{L}$
 with $q_\mu^{*}(bv)=[a]_\mu\, q_\mu^{*}(w)$. Comparing first letters gives
 $[b]_\mu=[a]_\mu$, i.e.\ $\mathcal{R}(a,b)\ge\mu$, and comparing the remainders gives
-$q_\mu^{*}(v)=q_\mu^{*}(w)$, i.e.\ $w\sim_\mu^{\Sigma^{*}} v$; hence
+$q_\mu^{*}(v)=q_\mu^{*}(w)$, i.e.\ $w\sim_\mu^{\Sigma^{*}} v$; thus
 $w\in\partial_a^{\mu}(\mathcal{L})$. The displayed consequence follows because
 $\partial_{[a]_\mu}(\mathcal{L}^{\mu})$ consists only of quotient words, and each
 such word has at least one representative in $\Sigma^{*}$.
@@ -1662,7 +1768,7 @@ Consider $\mathcal{L}=\{ab,\,cd,\,cb\}$. To compute $\partial_a^{\mu}(\mathcal{L
 collect the words of $\mathcal{L}$ whose first letter is $\mu$-similar to $a$,
 that is, lies in $\{a,c\}$, and keep their suffixes up to $\mu$-similarity. All
 three words $ab,cd,cb$ begin with a letter in $\{a,c\}$, leaving the suffixes
-$b,d,b$, each of which is $\mu$-similar exactly to the words in $\{b,d\}$. Hence
+$b,d,b$, each of which is $\mu$-similar exactly to the words in $\{b,d\}$. Ergo
 \[
 \partial_a^{\mu}(\mathcal{L})=\{b,d\}=\partial_c^{\mu}(\mathcal{L}),
 \]
@@ -1695,11 +1801,11 @@ Since $q_\mu^{*}$ is a homomorphism and $\mathcal{L}$ is regular, the quotient i
 $\mathcal{L}^{\mu}$ is regular over the finite alphabet $\Sigma^{\mu}$; classical
 derivatives preserve regularity (Theorem~\ref{the:language-derivative-regular}), so
 $\partial_{[a]_\mu}(\mathcal{L}^{\mu})$ is regular; and the inverse homomorphic image
-of a regular language is regular. Hence $\partial_a^{\mu}(\mathcal{L})$ is regular.
+of a regular language is regular. Thus $\partial_a^{\mu}(\mathcal{L})$ is regular.
 For a word $u=a_1\cdots a_n$ the same argument applies at each step of
 $\partial_u^{\mu}(\mathcal{L})=\partial_{a_n}^{\mu}(\cdots\partial_{a_1}^{\mu}(\mathcal{L})\cdots)$,
 so $\partial_u^{\mu}(\mathcal{L})$ is regular. The expression statement is immediate
-from Definitions~\ref{def:fuzzy-deriv-expr} and~\ref{def:fuzzy-word-deriv}: ordinary
+from Definitions~\ref{def:fuzzy-deriv-expr} and~\ref{def:fuzzy-word-deriv}. Ordinary
 Brzozowski derivatives are restricted regular expressions, and a finite sum of
 restricted regular expressions is restricted.
 \end{proof}
@@ -1742,10 +1848,10 @@ replaced by a $\mu$-similar one, so as $b$ ranges over the class of $a$ and $s$ 
 the class of $r$, the words $bv$ with $v\in\mathcal{L}(s)$ range exactly over the
 words that are $\mu$-similar, letter by letter, to words of $\mathcal{L}(r)$ and
 begin with a letter $\mu$-similar to $a$. Closing the displayed union under
-$\mu$-similarity of the suffix therefore yields precisely the set described in
+$\mu$-similarity of the suffix ergo yields precisely the set described in
 Definition~\ref{def:fuzzy-deriv-lang}, that is
 $\mathcal{L}^{\mu}\bigl(\mathcal{D}_a^{\mu}(r)\bigr)=\partial_a^{\mu}\bigl(\mathcal{L}(r)\bigr)$.
-For a word $u=av$ the argument is by induction on $|u|$: using
+For a word $u=av$ the argument is by induction on $|u|$. Using
 Definitions~\ref{def:fuzzy-word-deriv} and the single-symbol case,
 \[
 \mathcal{L}^{\mu}\bigl(\mathcal{D}_u^{\mu}(r)\bigr)
@@ -1773,7 +1879,7 @@ $D^{\mu}=\{\,\partial_x(\mathcal{L}^{\mu})\mid x\in(\Sigma^{\mu})^{*}\,\}$ is fi
 By repeated application of Theorem~\ref{the:quotient-fuzzy-derivative}, every fuzzy
 derivative has the form
 $\partial_u^{\mu}(\mathcal{L})=(q_\mu^{*})^{-1}\bigl(\partial_{q_\mu^{*}(u)}(\mathcal{L}^{\mu})\bigr)$,
-the inverse image of an element of the finite set $D^{\mu}$. Hence
+the inverse image of an element of the finite set $D^{\mu}$. Ergo
 $\{\,\partial_u^{\mu}(\mathcal{L})\mid u\in\Sigma^{*}\,\}$ is finite.
 \end{proof}
 
@@ -1795,7 +1901,7 @@ and the right-hand set is finite by Theorem~\ref{the:fuzzy-finite}.
 \end{proof}
 
 Finiteness guarantees that the construction of Section~\ref{sec:dfa}, run with fuzzy
-derivatives, terminates. The resulting automaton recognises the words that lie
+derivatives, terminates. The automaton recognises the words that lie
 within tolerance $\mu$ of the language of $r$.
 
 \begin{theorem}[Fuzzy DFA correctness]\label{the:fuzzy-dfa}
@@ -1804,9 +1910,13 @@ $M^{\mu}=\langle Q^{\mu},\Sigma,\delta^{\mu},q_0^{\mu},F^{\mu}\rangle$ be the DF
 constructed from $r$ with fuzzy derivatives at cut $\mu$, that is, with
 $q_0^{\mu}=[r]$, $\delta^{\mu}(q,a)=[\mathcal{D}_a^{\mu}(q)]$, and
 $F^{\mu}=\{q\mid \nu(q)=\varepsilon\}$. Writing
-$\mathcal{L}_\Sigma^{\mu}(r)=(q_\mu^{*})^{-1}\bigl(q_\mu^{*}(\mathcal{L}(r))\bigr)$ for
-the words that are $\mu$-similar to some word of $r$, the automaton satisfies
-$\mathcal{L}(M^{\mu})=\mathcal{L}_\Sigma^{\mu}(r)$.
+\[
+\mathcal{L}_\Sigma^{\mu}(r)=(q_\mu^{*})^{-1}\bigl(q_\mu^{*}(\mathcal{L}(r))\bigr)
+\]
+for the words that are $\mu$-similar to some word of $r$, the automaton satisfies
+\[
+\mathcal{L}(M^{\mu})=\mathcal{L}_\Sigma^{\mu}(r).
+\]
 \end{theorem}
 
 \begin{proof}
@@ -1837,11 +1947,5 @@ w \text{ accepted by } M^{\mu}
 where the fourth step uses that the only word $\mu$-similar to $\varepsilon$ is
 $\varepsilon$ itself, the fifth is Theorem~\ref{the:fuzzy-correspondence}, and the
 last is the definition of $\mathcal{L}_\Sigma^{\mu}(r)$ together with the quotient
-form of the fuzzy derivative. Hence $\mathcal{L}(M^{\mu})=\mathcal{L}_\Sigma^{\mu}(r)$.
+form of the fuzzy derivative. Ergo $\mathcal{L}(M^{\mu})=\mathcal{L}_\Sigma^{\mu}(r)$.
 \end{proof}
-
-Equivalently, by Theorem~\ref{the:quotient-fuzzy-derivative} this automaton is the
-derivative automaton of the quotient language $\mathcal{L}(r)^{\mu}$ over the finite
-alphabet $\Sigma^{\mu}$, read back along $q_\mu^{*}$: on the quotient alphabet the
-fuzzy automaton is an ordinary derivative automaton, and it accepts a word precisely
-when that word is $\mu$-similar to some word denoted by $r$.

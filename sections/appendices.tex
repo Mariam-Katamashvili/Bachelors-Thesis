@@ -1,48 +1,111 @@
+\phantomsection
 \addcontentsline{toc}{section}{Appendices}
 \section*{Appendices}
 
-\subsection*{Appendix A: Structure of the Rocq Development}
+\subsection*{Appendix A: Index of the Rocq Formalisation}
 
-The accompanying Rocq formalisation~\cite{OurRocqRepo} is organised into the
-following source files, listed in dependency order. Together they build the crisp
-theory of derivatives and the derivative automaton on top of the
-Coquand--Siles~\cite{CoquandRegexEquality,RocqRegexpBrzozowski} normalisation
-machinery, and provide the similarity infrastructure for the fuzzy layer.
+This appendix indexes every Rocq definition, function, record and theorem that
+appears in a code listing of this thesis. The entries are grouped by topic, following
+the order in which they are developed in
+Section~\ref{sec:methodology}. The source file of each group is named in its
+heading. The full development is available in the
+repository~\cite{OurRocqRepo}.
 
+\renewcommand{\arraystretch}{1.3}
 \begingroup\sloppy
-\begin{itemize}
-  \item \texttt{Alphabet.v}: abstract alphabet via the module types
-        \texttt{SYM}, \texttt{OSYM}, \texttt{FINSYM}, \texttt{OFINSYM}
-        (symbols, ordered symbols, finite alphabets).
-  \item \texttt{Languages.v}: words (\texttt{word}) and languages
-        (\texttt{language}) together with the language operations
-        \texttt{void}, \texttt{eps}, \texttt{atom}, \texttt{plus}, \texttt{conc},
-        \texttt{star}, \texttt{prod}, \texttt{compl}.
-  \item \texttt{RegexSemantics.v}: the inductive type \texttt{regex}, the
-        predicate \texttt{restricted\_regex}, the semantic interpretation
-        \texttt{den}, and semantic equivalence with its equivalence-relation
-        proofs.
-  \item \texttt{Nullable.v}: the nullability test \texttt{has\_eps}/\texttt{nu}
-        and its correctness (\texttt{nullable\_correct}, \texttt{mem\_nu}).
-  \item \texttt{Canonicalization.v}: normalisation \texttt{canonize} via smart
-        constructors (\texttt{mkPlus}, \texttt{mkConc}, \texttt{mkStar},
-        \texttt{mkAnd}, \texttt{mkNot}) and the similarity relation \texttt{similar}.
-  \item \texttt{CanonicalizationCorrectness.v}: correctness of normalisation,
-        with \texttt{similar\_iff\_nf\_eq}, \texttt{similar\_sound} and
-        \texttt{canonize\_correct}.
-  \item \texttt{Derivatives.v}: semantic derivatives (\texttt{dlang}) and
-        syntactic derivatives (\texttt{D\_char}, \texttt{D}), the
-        correspondence theorem (\texttt{D\_correct}), and regularity
-        preservation (\texttt{derivative\_regular}).
-  \item \texttt{Automata.v}, \texttt{AutomataConstruction.v}: the derivative
-        DFA (\texttt{constructed\_dfa}, \texttt{construct\_dfa}), the extended
-        transition function (\texttt{delta\_star}), and DFA correctness
-        (\texttt{dfa\_correctness}).
-  \item \texttt{SimilarityRelations.v}: T-norm (\texttt{smin}), cut value
-        (\texttt{cut\_value}, \texttt{mu\_cut}), proximity and similarity
-        (\texttt{is\_proximity}, \texttt{is\_similarity}), and the relations
-        \texttt{Rw}, \texttt{RL}, \texttt{Rr} with their similarity proofs.
-  \item Supporting and example files: \texttt{DerivativeExamples.v},
-        \texttt{ExamplesCanonicize.v}, \texttt{AutomataExample.v}.
-\end{itemize}
+\begin{longtable}{@{}p{0.30\linewidth} p{0.55\linewidth} c@{}}
+\toprule
+\textbf{Rocq name} & \textbf{What it is} & \textbf{Page} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Rocq name} & \textbf{What it is} & \textbf{Page} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r@{}}{\footnotesize\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\multicolumn{3}{@{}l}{\textbf{Alphabet, words, and languages} (\texttt{Alphabet.v}, \texttt{Languages.v})} \\
+\addlinespace[2pt]
+\texttt{SYM} & Module type for an abstract alphabet of symbols & \pageref{lst:words} \\
+\texttt{word} & A word as a finite sequence of symbols & \pageref{lst:words} \\
+\texttt{language} & A language as a decidable predicate on words & \pageref{lst:words} \\
+\texttt{void}, \texttt{eps}, \texttt{atom} & The empty language, the language $\{\varepsilon\}$, and the singleton $\{a\}$ & \pageref{lst:langops} \\
+\texttt{plus}, \texttt{conc}, \texttt{star} & Union, concatenation, and Kleene star of languages & \pageref{lst:langops} \\
+\texttt{prod}, \texttt{compl} & Intersection and complement of languages & \pageref{lst:langops} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{Regular expressions and their semantics} (\texttt{RegexSemantics.v})} \\
+\addlinespace[2pt]
+\texttt{regex} & Inductive datatype of regular expressions (eight constructors) & \pageref{lst:regex} \\
+\texttt{restricted\_regex} & Predicate selecting the restricted fragment (no \texttt{And}/\texttt{Neg}) & \pageref{lst:regex} \\
+\texttt{den} & Semantic interpretation $\mathcal{L}(\cdot)$ of an expression as a language & \pageref{lst:regex} \\
+\texttt{lang\_eq} & Extensional equality of two languages & \pageref{lst:equiv} \\
+\texttt{re\_equiv} & Semantic equivalence of expressions ($\mathcal{L}(r)=\mathcal{L}(s)$) & \pageref{lst:equiv} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{Nullability} (\texttt{Nullable.v})} \\
+\addlinespace[2pt]
+\texttt{has\_eps} & Boolean test for whether $\varepsilon$ is in the language of an expression & \pageref{lst:nullable} \\
+\texttt{nu} & The nullability constant $\nu(r)$, either $\varepsilon$ or $\emptyset$ & \pageref{lst:nullable} \\
+\texttt{nullable\_correct} & Lemma: \texttt{has\_eps} agrees with semantic nullability & \pageref{lst:nullable} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{Canonicalisation} (\texttt{Canonicalization.v}, \texttt{CanonicalizationCorrectness.v})} \\
+\addlinespace[2pt]
+\texttt{mkStar} (smart constructors) & Smart constructors that build expressions in normal form & \pageref{lst:canon} \\
+\texttt{canonize} / \texttt{nf} & The canonicalisation (normal-form) function on expressions & \pageref{lst:canon} \\
+\texttt{similar} & Boolean similarity: equal normal forms & \pageref{lst:canon} \\
+\texttt{similar\_iff\_nf\_eq} & Theorem: $r\sim s$ iff $\mathsf{nf}(r)=\mathsf{nf}(s)$ & \pageref{lst:canoncorrect} \\
+\texttt{canonize\_correct} & Theorem: normalisation preserves the denoted language & \pageref{lst:soundcorrect} \\
+\texttt{similar\_sound} & Theorem: similar expressions are semantically equivalent & \pageref{lst:soundcorrect} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{Derivatives} (\texttt{Derivatives.v})} \\
+\addlinespace[2pt]
+\texttt{dlang\_char}, \texttt{dlang} & Semantic (language) derivatives by a symbol and by a word & \pageref{lst:dlang} \\
+\texttt{D\_char} & Syntactic derivative of an expression by a symbol & \pageref{lst:dchar} \\
+\texttt{D} & Syntactic derivative of an expression by a word & \pageref{lst:dchar} \\
+\texttt{D\_char\_correct} & Lemma: the symbol derivative matches the semantic one & \pageref{lst:dcorrect} \\
+\texttt{D\_correct} & Theorem: the word derivative matches the semantic one & \pageref{lst:dcorrect} \\
+\texttt{regular} & Predicate: a language is denoted by some expression & \pageref{lst:regular} \\
+\texttt{derivative\_regular} & Theorem: derivatives of a regular language stay regular & \pageref{lst:regular} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{The derivative automaton} (\texttt{Automata.v}, \texttt{AutomataConstruction.v})} \\
+\addlinespace[2pt]
+\texttt{dfa} & Record type of a deterministic finite automaton & \pageref{lst:dfadef} \\
+\texttt{constructed\_dfa} & The (abstract) derivative DFA of an expression & \pageref{lst:dfadef} \\
+\texttt{goto} & Recursive state-exploration building reachable states and transitions & \pageref{lst:goto} \\
+\texttt{construct\_dfa} & Executable driver constructing the derivative DFA & \pageref{lst:constructdfa} \\
+\texttt{delta\_star} & Extended transition function: running the automaton on a word & \pageref{lst:dfa} \\
+\texttt{dfa\_correctness} & Theorem: the constructed DFA accepts exactly $\mathcal{L}(r)$ & \pageref{lst:dfa} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{T-norms and fuzzy relations} (\texttt{SimilarityRelations.v})} \\
+\addlinespace[2pt]
+\texttt{simval}, \texttt{in01} & Similarity values and the membership predicate for $[0,1]$ & \pageref{lst:tnorm} \\
+\texttt{T\_norm} & Record bundling a T-norm with its algebraic laws & \pageref{lst:tnorm} \\
+\texttt{smin}, \texttt{godel\_t\_norm} & Gödel's minimum and its packaging as a T-norm & \pageref{lst:tnorm} \\
+\texttt{cut\_value}, \texttt{mu\_cut} & A cut threshold $\mu$ and the $\mu$-cut of a fuzzy relation & \pageref{lst:fuzzyrel} \\
+\texttt{fuzzy\_rel}, \texttt{is\_fuzzy\_rel} & A fuzzy relation and the constraint that it lands in $[0,1]$ & \pageref{lst:fuzzyrel} \\
+\texttt{is\_proximity} & Record: a reflexive, symmetric fuzzy relation & \pageref{lst:fuzzyrel} \\
+\texttt{is\_T\_similarity} & Record: a proximity satisfying the reverse triangle inequality & \pageref{lst:fuzzyrel} \\
+\addlinespace[4pt]
+
+\multicolumn{3}{@{}l}{\textbf{Induced similarities and finiteness} (\texttt{SimilarityRelations.v})} \\
+\addlinespace[2pt]
+\texttt{Rw\_T} & Similarity on words induced by the symbol similarity & \pageref{lst:Rw} \\
+\texttt{RL\_T} & Similarity on languages (infimum of suprema, both directions) & \pageref{lst:RL} \\
+\texttt{GE} & Gödel similarity on regular expressions & \pageref{lst:GE} \\
+\texttt{RE\_T} & Syntactic similarity on expressions for a general T-norm & \pageref{lst:rr} \\
+\texttt{general\_\allowbreak similarity\_\allowbreak relations} & Lemma: $\mathcal{R}^{e}$, $\mathcal{R}^{w}$, $\mathcal{R}^{L}$ are $T$-similarities & \pageref{lst:simproofs} \\
+\texttt{syntactic\_\allowbreak similarity\_\allowbreak candidates} & Finite list of expressions sharing the shape of a given one & \pageref{lst:finite} \\
+\texttt{finite\_\allowbreak syntactic\_\allowbreak similarity} & Lemma: only finitely many expressions are similar to a given one & \pageref{lst:finite} \\
+
+\end{longtable}
 \endgroup
+\renewcommand{\arraystretch}{1}
