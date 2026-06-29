@@ -124,13 +124,13 @@ For a regular expression $r$ over $\Sigma$, its \emph{semantic interpretation} i
 the language $\mathcal{L}(r) \subseteq \Sigma^*$ defined inductively by
 \[
 \begin{aligned}
-\mathcal{L}(\emptyset)   &= \emptyset, \\
+\mathcal{L}(\emptyset)   &= \emptyset, &\qquad
 \mathcal{L}(\varepsilon) &= \{\varepsilon\}, \\
-\mathcal{L}(a)           &= \{a\}, \quad a \in \Sigma, \\
+\mathcal{L}(a)           &= \{a\},\ a \in \Sigma, &\qquad
 \mathcal{L}(r + s)       &= \mathcal{L}(r) \cup \mathcal{L}(s), \\
-\mathcal{L}(r \cdot s)   &= \mathcal{L}(r)\cdot\mathcal{L}(s), \\
+\mathcal{L}(r \cdot s)   &= \mathcal{L}(r)\cdot\mathcal{L}(s), &\qquad
 \mathcal{L}(r^*)         &= \textstyle\bigcup_{n \geq 0} \mathcal{L}(r)^n, \\
-\mathcal{L}(r \& s)      &= \mathcal{L}(r) \cap \mathcal{L}(s), \\
+\mathcal{L}(r \& s)      &= \mathcal{L}(r) \cap \mathcal{L}(s), &\qquad
 \mathcal{L}(\neg r)      &= \Sigma^* \setminus \mathcal{L}(r).
 \end{aligned}
 \]
@@ -255,13 +255,13 @@ A regular expression $r$ is \emph{nullable} if $\varepsilon \in \mathcal{L}(r)$.
 Equivalently, $\nu$ is characterised by the following equations:
 \[
 \begin{aligned}
-     \nu(\emptyset)      &= \emptyset, \\
+     \nu(\emptyset)      &= \emptyset, &\qquad
      \nu(\varepsilon)    &= \varepsilon, \\
-     \nu(a)              &= \emptyset, \quad a \in \Sigma, \\
+     \nu(a)              &= \emptyset,\ a \in \Sigma, &\qquad
      \nu(r+s)            &= \nu(r) + \nu(s), \\
-     \nu(r\cdot s)       &= \nu(r)\,\&\,\nu(s), \\
+     \nu(r\cdot s)       &= \nu(r)\,\&\,\nu(s), &\qquad
      \nu(r^*)            &= \varepsilon, \\
-     \nu(r\,\&\,s)       &= \nu(r)\,\&\,\nu(s), \\
+     \nu(r\,\&\,s)       &= \nu(r)\,\&\,\nu(s), &\qquad
      \nu(\neg r)         &= \varepsilon \text{ if } \nu(r) = \emptyset,
                             \text{ and } \emptyset \text{ if } \nu(r) = \varepsilon.
 \end{aligned}
@@ -317,6 +317,10 @@ Proof.
   - move=> r IH; by rewrite IH.
 Qed.
 \end{lstlisting}
+
+The script above and the term below are the same proof in two forms. One is the high level script we write, the other is the low level term Rocq stores and checks. The term makes every induction case and rewrite explicit.
+
+\lstinputlisting[style=rocqstyle,caption={Proof term produced by the script for \texttt{nullable\_correct}.},label={lst:nullable-correct-term}]{nullable_correct_term.out}
 
 \begin{definition}[Semantic equivalence]\label{def:semantic-equivalence}
 For regular expressions $r,s$, the relation $r \equiv s$ holds if
@@ -531,23 +535,6 @@ $(\varepsilon+a)^{*}$ are semantically equivalent but not similar. The construct
 of $\mathsf{nf}$ and the two lemmas above build on the development of Coquand and
 Siles~\cite{CoquandRegexEquality}.
 
-\begin{remark}[Substitution and the boundary of regularity]\label{rem:substitution}
-The Kleene star is a restricted, tail-recursive form of iteration, and this
-restriction is what keeps it within the regular languages. Writing
-$r[a]$ to highlight an occurrence of a symbol $a$ in $r$, and $r[s]$ for the
-expression obtained by substituting $s$ for that occurrence, one may define a
-general iteration $r[a]^{\#}$ by
-$\mathcal{L}(r[a]^{\#})=\{\varepsilon\}\cup\bigcup_{n\ge0}\mathcal{L}(r[a]^{\#}_{n})$,
-where $\mathcal{L}(r[a]^{\#}_{0})=\mathcal{L}(r[a])$ and
-$\mathcal{L}(r[a]^{\#}_{n+1})=\mathcal{L}(r[\,r[a]^{\#}_{n}\,])$. If the
-substitution is not tail-recursive this escapes the regular languages. For
-$r=a[a]b$ one obtains
-$\mathcal{L}(r[a]^{\#})=\{\varepsilon\}\cup\{a^{n+1}b^{n}\mid n\in\mathbb{N}\}$,
-which is not regular. This delimits the setting of the thesis, which stays with the
-regular operators, for which derivatives are finite and the automaton construction
-terminates.
-\end{remark}
-
 \subsection{Derivatives of Regular Languages and Regular Expressions}
 \label{sec:crisp-derivatives}
 
@@ -591,16 +578,16 @@ interpreting them as languages. This is the syntactic derivative.
 For a regular expression $r$ over $\Sigma$ and $a\in\Sigma$, the derivative
 $\mathcal{D}_a(r)$ is defined recursively by
 \[
-\begin{array}{rcl}
-    \mathcal{D}_a(\emptyset) &=& \emptyset,\\[0.4ex]
+\begin{array}{rcl@{\qquad}rcl}
+    \mathcal{D}_a(\emptyset) &=& \emptyset, &
     \mathcal{D}_a(\varepsilon) &=& \emptyset,\\[0.4ex]
-    \mathcal{D}_a(a) &=& \varepsilon,\\[0.4ex]
+    \mathcal{D}_a(a) &=& \varepsilon, &
     \mathcal{D}_a(b) &=& \emptyset \quad (a\neq b),\\[0.4ex]
-    \mathcal{D}_a(r+s) &=& \mathcal{D}_a(r)+\mathcal{D}_a(s),\\[0.4ex]
-    \mathcal{D}_a(r\cdot s) &=& \mathcal{D}_a(r)\cdot s + \nu(r)\cdot \mathcal{D}_a(s),\\[0.4ex]
+    \mathcal{D}_a(r+s) &=& \mathcal{D}_a(r)+\mathcal{D}_a(s), &
     \mathcal{D}_a(r^*) &=& \mathcal{D}_a(r)\cdot r^*,\\[0.4ex]
-    \mathcal{D}_a(r\,\&\,s) &=& \mathcal{D}_a(r)\,\&\,\mathcal{D}_a(s),\\[0.4ex]
-    \mathcal{D}_a(\neg r) &=& \neg(\mathcal{D}_a(r)).
+    \mathcal{D}_a(r\,\&\,s) &=& \mathcal{D}_a(r)\,\&\,\mathcal{D}_a(s), &
+    \mathcal{D}_a(\neg r) &=& \neg(\mathcal{D}_a(r)),\\[0.4ex]
+    \mathcal{D}_a(r\cdot s) &=& \multicolumn{4}{l}{\mathcal{D}_a(r)\cdot s + \nu(r)\cdot \mathcal{D}_a(s).}
 \end{array}
 \]
 The derivative with respect to a word is $\mathcal{D}_\varepsilon(r)=r$ and
@@ -745,7 +732,7 @@ Proof.
 Qed.
 \end{lstlisting}
 
-\begin{theorem}[Finiteness of derivatives]\label{the:derivative-set-is-finite}
+\begin{theorem}[Finiteness of derivatives, {Brzozowski~\cite[Theorem~5.2]{B64}}]\label{the:derivative-set-is-finite}
 Let $\Sigma$ be finite and $L\subseteq\Sigma^{*}$ regular. Then the set
 $\{\,\partial_{u}(L)\mid u \in \Sigma^*\,\}$ is finite.
 \end{theorem}
@@ -917,49 +904,39 @@ Definition construct_dfa (fuel : nat) (r : regex) : dfa :=
 \end{lstlisting}
 
 \begin{remark}[Termination]\label{rem:termination}
-Since $\Sigma$ is finite, the exploration branches finitely at each state.
-Moreover, Coquand and Siles~\cite{CoquandRegexEquality} show that the set of
-Brzozowski derivatives of any expression is finite with respect to $\sim$, and the
-states here are canonical representatives modulo $\sim$. Ergo only finitely many
-distinct states are ever discovered, and the process stops as soon as no
-new canonical form appears. In a constructive setting ``finite'' is not a
-single notion, and the distinction matters in Rocq. The derivative set is finite up to
-the equivalence $\sim$, not up to syntactic equality. The Coquand--Siles result gives
-a covering list, so the set is Kuratowski-finite. That alone does not bound the number
-of distinct states, since the checker cannot count entries it cannot tell apart. One
-first needs decidable equality on canonical forms modulo $\sim$. This is exactly the
-decision procedure for regular expression equivalence in type theory of Coquand and
-Siles~\cite{CoquandRegexEquality}. With it the covering list collapses to a bijection
-with a prefix, so the set is inductively finite, and the number of canonical
-derivatives becomes an explicit decidable bound. That bound is what the termination
-argument uses.
+The exploration adds a state only when a new canonical form appears, and it halts
+once none does. Termination is the claim that this halt is reached. Since $\Sigma$
+is finite, each state branches finitely, so termination reduces to the set of
+canonical forms being finite. In a constructive setting ``finite'' is not a single
+notion, and which notion holds decides whether a halting procedure exists. Coquand
+and Siles~\cite{CoquandRegexEquality} settle this.
+\begin{quote}
+Brzozowski's result that any regular expression has only a finite number of
+derivatives is purely existential. [\ldots] In type theory, this will correspond to
+the fact that we can prove that the set of all derivatives of $E$ is inductively
+finite up to similarity, but we can not prove without a further hypothesis on
+similarity (namely that similarity is closed under derivatives) that this set is
+Kuratowski finite up to similarity. On the other hand, we can always show that the
+set of derivatives is Kuratowski finite up to equivalence.
+\end{quote}
 \end{remark}
 
 \begin{remark}[The \texttt{fuel} argument]\label{rem:fuel}
 The functions above carry an extra counter, \texttt{fuel}, that the abstract procedure
-does not need. Rocq requires it. Rocq accepts a recursive function only when it can see
-that the function stops, and it sees this by checking that each call works on a smaller
-piece of some input. The exploration does not fit this pattern. \texttt{goto} calls itself
-on the new derivative \texttt{q\_a}, which is not a smaller piece of anything it was given.
-We know it stops, because there are only finitely many states, but Rocq cannot see that
-on its own. The counter makes it visible. \texttt{goto} starts with some \texttt{fuel} and
-spends one unit each time it reaches a new state, and it stops when the fuel runs out. The
-fuel only goes down, so Rocq can tell the function stops.
+does not need. Rocq requires it. Rocq models only total functions, so every term
+terminates, and ergo Rocq is not a full-fledged programming language. Rocq accepts a
+recursive function only when it can see that the function terminates, and it sees this by
+checking that each call works on a smaller piece of some input. The exploration does not
+fit this pattern. \texttt{goto} calls itself on the new derivative \texttt{q\_a}, which is
+not a smaller piece of anything it was given. We know it terminates, because there are only
+finitely many states, but Rocq cannot see that on its own. The counter makes it visible.
+\texttt{goto} starts with some \texttt{fuel} and spends one unit each time it reaches a new
+state, and it terminates when the fuel runs out. The fuel only goes down, so Rocq can tell
+the function terminates.
 
-The amount of fuel does not affect correctness. When a transition is missing from the
-table, \texttt{step} computes $[\mathcal{D}_a(q)]$ directly instead, so
-\texttt{dfa\_correctness} holds for \emph{every} value of \texttt{fuel}. Too little fuel
-never gives a wrong language. It only leaves the table partial, and the missing
-transitions are computed on demand.
-
-It is enough to give \texttt{goto} as much fuel as there are reachable states. The fuel
-bounds how deep the search goes, not how many states it finds in all. Each step deeper
-reaches a state not seen before, so the deepest chain is no longer than the number of
-states. One unit is
-spent per new state, and the states found along one path are all different, so no path is
-longer than the number of states. That number is finite, so enough fuel always exists, and
-more fuel does no harm. In practice one picks an upper bound on the number of states and
-raises it until the set of discovered states stops growing.
+The fuel bounds how far the exploration goes. The reachable states are finite, and in the
+worst case their number grows exponentially with the size of $r$. So giving \texttt{goto}
+fuel equal to that exponential bound is enough to reach every state.
 \end{remark}
 
 \begin{theorem}[DFA correctness]\label{the:dfa-correctness}

@@ -11,8 +11,8 @@ Section~\ref{sec:methodology}. The source file of each group is named in its
 heading. The full development is available in the
 repository~\cite{OurRocqRepo}.
 
-\renewcommand{\arraystretch}{1.3}
-\begingroup\sloppy
+\renewcommand{\arraystretch}{1.0}
+\begingroup\sloppy\small
 \begin{longtable}{@{}p{0.30\linewidth} p{0.55\linewidth} c@{}}
 \toprule
 \textbf{Rocq name} & \textbf{What it is} & \textbf{Page} \\
@@ -36,7 +36,7 @@ repository~\cite{OurRocqRepo}.
 \texttt{void}, \texttt{eps}, \texttt{atom} & The empty language, the language $\{\varepsilon\}$, and the singleton $\{a\}$ & \pageref{lst:langops} \\
 \texttt{plus}, \texttt{conc}, \texttt{star} & Union, concatenation, and Kleene star of languages & \pageref{lst:langops} \\
 \texttt{prod}, \texttt{compl} & Intersection and complement of languages & \pageref{lst:langops} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{Regular expressions and their semantics} (\texttt{RegexSemantics.v})} \\
 \addlinespace[2pt]
@@ -45,14 +45,14 @@ repository~\cite{OurRocqRepo}.
 \texttt{den} & Semantic interpretation $\mathcal{L}(\cdot)$ of an expression as a language & \pageref{lst:regex} \\
 \texttt{lang\_eq} & Extensional equality of two languages & \pageref{lst:equiv} \\
 \texttt{re\_equiv} & Semantic equivalence of expressions ($\mathcal{L}(r)=\mathcal{L}(s)$) & \pageref{lst:equiv} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{Nullability} (\texttt{Nullable.v})} \\
 \addlinespace[2pt]
 \texttt{has\_eps} & Boolean test for whether $\varepsilon$ is in the language of an expression & \pageref{lst:nullable} \\
 \texttt{nu} & The nullability constant $\nu(r)$, either $\varepsilon$ or $\emptyset$ & \pageref{lst:nullable} \\
 \texttt{nullable\_correct} & Lemma: \texttt{has\_eps} agrees with semantic nullability & \pageref{lst:nullable} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{Canonicalisation} (\texttt{Canonicalization.v}, \texttt{CanonicalizationCorrectness.v})} \\
 \addlinespace[2pt]
@@ -62,7 +62,7 @@ repository~\cite{OurRocqRepo}.
 \texttt{similar\_iff\_nf\_eq} & Theorem: $r\sim s$ iff $\mathsf{nf}(r)=\mathsf{nf}(s)$ & \pageref{lst:canoncorrect} \\
 \texttt{canonize\_correct} & Theorem: normalisation preserves the denoted language & \pageref{lst:soundcorrect} \\
 \texttt{similar\_sound} & Theorem: similar expressions are semantically equivalent & \pageref{lst:soundcorrect} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{Derivatives} (\texttt{Derivatives.v})} \\
 \addlinespace[2pt]
@@ -73,7 +73,7 @@ repository~\cite{OurRocqRepo}.
 \texttt{D\_correct} & Theorem: the word derivative matches the semantic one & \pageref{lst:dcorrect} \\
 \texttt{regular} & Predicate: a language is denoted by some expression & \pageref{lst:regular} \\
 \texttt{derivative\_regular} & Theorem: derivatives of a regular language stay regular & \pageref{lst:regular} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{The derivative automaton} (\texttt{Automata.v}, \texttt{AutomataConstruction.v})} \\
 \addlinespace[2pt]
@@ -83,7 +83,7 @@ repository~\cite{OurRocqRepo}.
 \texttt{construct\_dfa} & Executable driver constructing the derivative DFA & \pageref{lst:constructdfa} \\
 \texttt{delta\_star} & Extended transition function: running the automaton on a word & \pageref{lst:dfa} \\
 \texttt{dfa\_correctness} & Theorem: the constructed DFA accepts exactly $\mathcal{L}(r)$ & \pageref{lst:dfa} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{T-norms and fuzzy relations} (\texttt{SimilarityRelations.v})} \\
 \addlinespace[2pt]
@@ -94,7 +94,7 @@ repository~\cite{OurRocqRepo}.
 \texttt{fuzzy\_rel}, \texttt{is\_fuzzy\_rel} & A fuzzy relation and the constraint that it lands in $[0,1]$ & \pageref{lst:fuzzyrel} \\
 \texttt{is\_proximity} & Record: a reflexive, symmetric fuzzy relation & \pageref{lst:fuzzyrel} \\
 \texttt{is\_T\_similarity} & Record: a proximity satisfying the reverse triangle inequality & \pageref{lst:fuzzyrel} \\
-\addlinespace[4pt]
+\addlinespace[2pt]
 
 \multicolumn{3}{@{}l}{\textbf{Induced similarities and finiteness} (\texttt{SimilarityRelations.v})} \\
 \addlinespace[2pt]
